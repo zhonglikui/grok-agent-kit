@@ -1,6 +1,6 @@
 import { Command } from "commander";
 
-import { renderTextResult } from "../output.js";
+import { renderStreamResult, renderTextResult } from "../output.js";
 import type { CliDependencies } from "../types.js";
 
 export function createWebSearchCommand(dependencies: CliDependencies): Command {
@@ -17,10 +17,15 @@ export function createWebSearchCommand(dependencies: CliDependencies): Command {
     .option("--no-store", "Do not store the response on xAI")
     .option("--allow-domain <domains...>", "Allow only these domains")
     .option("--exclude-domain <domains...>", "Exclude these domains")
+    .option("--stream", "Stream text output as it arrives")
     .option("--json", "Print JSON output")
     .action(async (options) => {
       if (options.session && options.store === false) {
         throw new Error("--session cannot be used with --no-store");
+      }
+
+      if (options.stream && options.json) {
+        throw new Error("--stream cannot be used with --json");
       }
 
       if (options.resetSession && !options.session) {
@@ -41,13 +46,22 @@ export function createWebSearchCommand(dependencies: CliDependencies): Command {
         existingSession = await dependencies.sessionStore.get(options.session);
       }
 
+      let streamedText = "";
       const result = await dependencies.service.webSearch({
         prompt: options.prompt,
         model: options.model,
         previousResponseId,
         store: options.session ? true : options.store,
         allowedWebDomains: options.allowDomain,
-        excludedWebDomains: options.excludeDomain
+        excludedWebDomains: options.excludeDomain,
+        ...(options.stream
+          ? {
+              onTextDelta: async (chunk: string) => {
+                streamedText += chunk;
+                dependencies.writeStdoutRaw(chunk);
+              }
+            }
+          : {})
       });
 
       const nextResponseId = result.responseId ?? existingSession?.responseId;
@@ -68,6 +82,16 @@ export function createWebSearchCommand(dependencies: CliDependencies): Command {
             }
           ]
         });
+      }
+
+      if (options.stream) {
+        renderStreamResult(
+          result,
+          streamedText.length > 0,
+          dependencies.writeStdout,
+          dependencies.writeStdoutRaw
+        );
+        return;
       }
 
       renderTextResult(result, Boolean(options.json), dependencies.writeStdout);

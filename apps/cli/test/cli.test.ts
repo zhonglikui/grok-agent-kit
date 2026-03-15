@@ -152,6 +152,64 @@ describe("CLI", () => {
     );
   });
 
+  it("streams x-search output incrementally when --stream is used", async () => {
+    const stdout: string[] = [];
+    const service = {
+      chat: vi.fn(),
+      xSearch: vi.fn().mockImplementation(async (input) => {
+        await input.onTextDelta?.("Live");
+        await input.onTextDelta?.(" search");
+
+        return {
+          text: "Live search",
+          citations: [
+            {
+              url: "https://x.com/xai/status/1"
+            }
+          ],
+          responseId: "resp_x_stream"
+        };
+      }),
+      webSearch: vi.fn(),
+      models: vi.fn()
+    };
+
+    const cli = buildCli({
+      service,
+      sessionStore: {
+        get: vi.fn(),
+        list: vi.fn(),
+        set: vi.fn(),
+        delete: vi.fn()
+      },
+      startMcpServer: vi.fn(),
+      writeStdout: (value) => stdout.push(value),
+      writeStdoutRaw: (value) => stdout.push(value),
+      writeStderr: vi.fn()
+    });
+
+    await cli.parseAsync([
+      "node",
+      "grok-agent-kit",
+      "x-search",
+      "--prompt",
+      "Stream x results",
+      "--stream"
+    ]);
+
+    expect(service.xSearch).toHaveBeenCalledWith(
+      expect.objectContaining({
+        prompt: "Stream x results",
+        onTextDelta: expect.any(Function)
+      })
+    );
+    expect(stdout).toEqual([
+      "Live",
+      " search",
+      "\n\nSources:\n- https://x.com/xai/status/1"
+    ]);
+  });
+
   it("starts the MCP server for the mcp command", async () => {
     const startMcpServer = vi.fn().mockResolvedValue(undefined);
 
@@ -279,6 +337,64 @@ describe("CLI", () => {
         ])
       })
     );
+  });
+
+  it("streams web-search output incrementally when --stream is used", async () => {
+    const stdout: string[] = [];
+    const service = {
+      chat: vi.fn(),
+      xSearch: vi.fn(),
+      webSearch: vi.fn().mockImplementation(async (input) => {
+        await input.onTextDelta?.("Live");
+        await input.onTextDelta?.(" web");
+
+        return {
+          text: "Live web",
+          citations: [
+            {
+              url: "https://docs.x.ai"
+            }
+          ],
+          responseId: "resp_web_stream"
+        };
+      }),
+      models: vi.fn()
+    };
+
+    const cli = buildCli({
+      service,
+      sessionStore: {
+        get: vi.fn(),
+        list: vi.fn(),
+        set: vi.fn(),
+        delete: vi.fn()
+      },
+      startMcpServer: vi.fn(),
+      writeStdout: (value) => stdout.push(value),
+      writeStdoutRaw: (value) => stdout.push(value),
+      writeStderr: vi.fn()
+    });
+
+    await cli.parseAsync([
+      "node",
+      "grok-agent-kit",
+      "web-search",
+      "--prompt",
+      "Stream web results",
+      "--stream"
+    ]);
+
+    expect(service.webSearch).toHaveBeenCalledWith(
+      expect.objectContaining({
+        prompt: "Stream web results",
+        onTextDelta: expect.any(Function)
+      })
+    );
+    expect(stdout).toEqual([
+      "Live",
+      " web",
+      "\n\nSources:\n- https://docs.x.ai"
+    ]);
   });
 
   it("continues a named chat session and stores the new response id", async () => {
