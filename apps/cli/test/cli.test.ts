@@ -26,6 +26,7 @@ describe("CLI", () => {
       },
       startMcpServer: vi.fn(),
       writeStdout: (value) => stdout.push(value),
+      writeStdoutRaw: (value) => stdout.push(value),
       writeStderr: vi.fn()
     });
 
@@ -67,6 +68,7 @@ describe("CLI", () => {
       },
       startMcpServer: vi.fn(),
       writeStdout: (value) => stdout.push(value),
+      writeStdoutRaw: (value) => stdout.push(value),
       writeStderr: vi.fn()
     });
 
@@ -104,6 +106,7 @@ describe("CLI", () => {
       },
       startMcpServer,
       writeStdout: vi.fn(),
+      writeStdoutRaw: vi.fn(),
       writeStderr: vi.fn()
     });
 
@@ -134,6 +137,7 @@ describe("CLI", () => {
       },
       startMcpServer,
       writeStdout: vi.fn(),
+      writeStdoutRaw: vi.fn(),
       writeStderr: vi.fn()
     });
 
@@ -184,6 +188,7 @@ describe("CLI", () => {
       sessionStore,
       startMcpServer: vi.fn(),
       writeStdout: vi.fn(),
+      writeStdoutRaw: vi.fn(),
       writeStderr: vi.fn()
     });
 
@@ -244,6 +249,7 @@ describe("CLI", () => {
       sessionStore,
       startMcpServer: vi.fn(),
       writeStdout: (value) => stdout.push(value),
+      writeStdoutRaw: (value) => stdout.push(value),
       writeStderr: vi.fn()
     });
 
@@ -296,6 +302,7 @@ describe("CLI", () => {
       sessionStore,
       startMcpServer: vi.fn(),
       writeStdout: (value) => stdout.push(value),
+      writeStdoutRaw: (value) => stdout.push(value),
       writeStderr: vi.fn()
     });
 
@@ -309,5 +316,63 @@ describe("CLI", () => {
 
     expect(stdout[0]).toContain("Hello");
     expect(stdout[0]).toContain("Hi there");
+  });
+
+  it("streams chat output incrementally when --stream is used", async () => {
+    const stdout: string[] = [];
+    const service = {
+      chat: vi.fn().mockImplementation(async (input) => {
+        await input.onTextDelta?.("Hello");
+        await input.onTextDelta?.(" world");
+
+        return {
+          text: "Hello world",
+          citations: [
+            {
+              url: "https://docs.x.ai"
+            }
+          ],
+          responseId: "resp_stream"
+        };
+      }),
+      xSearch: vi.fn(),
+      webSearch: vi.fn(),
+      models: vi.fn()
+    };
+
+    const cli = buildCli({
+      service,
+      sessionStore: {
+        get: vi.fn(),
+        list: vi.fn(),
+        set: vi.fn(),
+        delete: vi.fn()
+      },
+      startMcpServer: vi.fn(),
+      writeStdout: (value) => stdout.push(value),
+      writeStdoutRaw: (value) => stdout.push(value),
+      writeStderr: vi.fn()
+    });
+
+    await cli.parseAsync([
+      "node",
+      "grok-agent-kit",
+      "chat",
+      "--prompt",
+      "Stream this",
+      "--stream"
+    ]);
+
+    expect(service.chat).toHaveBeenCalledWith(
+      expect.objectContaining({
+        prompt: "Stream this",
+        onTextDelta: expect.any(Function)
+      })
+    );
+    expect(stdout).toEqual([
+      "Hello",
+      " world",
+      "\n\nSources:\n- https://docs.x.ai"
+    ]);
   });
 });

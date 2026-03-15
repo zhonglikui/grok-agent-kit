@@ -3,6 +3,7 @@ import type {
   XaiModelListResponse,
   XaiRetryOptions,
   XaiResponse,
+  XaiResponseCreateOptions,
   XaiResponseCreateRequest,
   XaiTransportLike
 } from "./types.js";
@@ -77,8 +78,8 @@ export class XaiClient implements XaiTransportLike {
     };
 
     this.responses = {
-      create: async (request) =>
-        this.request<XaiResponse>("POST", "/responses", request)
+      create: async (request, options) =>
+        this.request<XaiResponse>("POST", "/responses", request, options)
     };
     this.models = {
       list: async () => this.request<XaiModelListResponse>("GET", "/models")
@@ -88,8 +89,11 @@ export class XaiClient implements XaiTransportLike {
   private async request<T>(
     method: "GET" | "POST",
     path: string,
-    body?: unknown
+    body?: unknown,
+    options?: XaiResponseCreateOptions
   ): Promise<T> {
+    const isStreamingRequest = Boolean(options?.onTextDelta);
+
     for (let attempt = 1; attempt <= this.retry.maxAttempts; attempt += 1) {
       const controller =
         this.timeoutMs !== undefined ? new AbortController() : undefined;
@@ -103,17 +107,32 @@ export class XaiClient implements XaiTransportLike {
           method,
           headers: {
             authorization: `Bearer ${this.apiKey}`,
-            "content-type": "application/json",
+            accept: isStreamingRequest ? "text/event-stream" : "application/json",
+            ...(body === undefined ? {} : { "content-type": "application/json" }),
             ...this.headers
           },
-          body: body === undefined ? undefined : JSON.stringify(body),
+          body:
+            body === undefined
+              ? undefined
+              : JSON.stringify(
+                  isStreamingRequest &&
+                    method === "POST" &&
+                    path === "/responses" &&
+                    body &&
+                    typeof body === "object"
+                    ? {
+                        ...(body as Record<string, unknown>),
+                        stream: true
+                      }
+                    : body
+                ),
           signal: controller?.signal
         });
 
-        const rawText = await response.text();
-        const parsedBody = rawText.length > 0 ? JSON.parse(rawText) : {};
-
         if (!response.ok) {
+          const rawText = await response.text();
+          const parsedBody = rawText.length > 0 ? JSON.parse(rawText) : {};
+
           if (
             attempt < this.retry.maxAttempts &&
             this.isRetryableStatus(response.status)
@@ -129,6 +148,15 @@ export class XaiClient implements XaiTransportLike {
           );
         }
 
+        if (isStreamingRequest && options?.onTextDelta) {
+          return (await this.readStreamingResponse(
+            response,
+            options.onTextDelta
+          )) as T;
+        }
+
+        const rawText = await response.text();
+        const parsedBody = rawText.length > 0 ? JSON.parse(rawText) : {};
         return parsedBody as T;
       } catch (error) {
         if (error instanceof SyntaxError) {
@@ -202,6 +230,208 @@ export class XaiClient implements XaiTransportLike {
     const exponentialDelay =
       this.retry.baseDelayMs * 2 ** Math.max(attempt - 1, 0);
     return Math.min(exponentialDelay, this.retry.maxDelayMs);
+  }
+
+  private async readStreamingResponse(
+    response: Response,
+    onTextDelta: NonNullable<XaiResponseCreateOptions["onTextDelta"]>
+  ): Promise<XaiResponse> {
+    if (!response.body) {
+      throw new XaiApiError("xAI API returned an empty streaming body", 502, undefined);
+    }
+
+    const reader = response.body.getReader();
+    const decoder = new TextDecoder();
+    let buffer = "";
+    let accumulatedText = "";
+    let finalResponse: XaiResponse | undefined;
+    let lastPayload: Record<string, unknown> | undefined;
+
+    while (true) {
+      const { done, value } = await reader.read();
+
+      if (done) {
+        break;
+      }
+
+      buffer += decoder.decode(value, { stream: true }).replace(/\r\n/g, "\n");
+
+      while (buffer.includes("\n\n")) {
+        const separatorIndex = buffer.indexOf("\n\n");
+        const rawEvent = buffer.slice(0, separatorIndex);
+        buffer = buffer.slice(separatorIndex + 2);
+
+        const handledEvent = await this.parseSseEvent(rawEvent, onTextDelta);
+        if (!handledEvent) {
+          continue;
+        }
+
+        if (handledEvent.done) {
+          continue;
+        }
+
+        if (handledEvent.deltaText) {
+          accumulatedText += handledEvent.deltaText;
+        }
+
+        if (handledEvent.payload) {
+          lastPayload = handledEvent.payload;
+        }
+
+        if (handledEvent.finalResponse) {
+          finalResponse = handledEvent.finalResponse;
+        }
+      }
+    }
+
+    buffer += decoder.decode().replace(/\r\n/g, "\n");
+
+    if (buffer.trim().length > 0) {
+      const handledEvent = await this.parseSseEvent(buffer, onTextDelta);
+      if (handledEvent?.deltaText) {
+        accumulatedText += handledEvent.deltaText;
+      }
+      if (handledEvent?.payload) {
+        lastPayload = handledEvent.payload;
+      }
+      if (handledEvent?.finalResponse) {
+        finalResponse = handledEvent.finalResponse;
+      }
+    }
+
+    if (finalResponse) {
+      return {
+        ...finalResponse,
+        output_text: finalResponse.output_text ?? accumulatedText
+      };
+    }
+
+    return {
+      id:
+        typeof lastPayload?.id === "string"
+          ? lastPayload.id
+          : "stream_response",
+      model: typeof lastPayload?.model === "string" ? lastPayload.model : undefined,
+      output_text: accumulatedText,
+      citations: Array.isArray(lastPayload?.citations)
+        ? (lastPayload.citations as XaiResponse["citations"])
+        : undefined,
+      output: Array.isArray(lastPayload?.output)
+        ? (lastPayload.output as unknown[])
+        : undefined
+    };
+  }
+
+  private async parseSseEvent(
+    rawEvent: string,
+    onTextDelta: NonNullable<XaiResponseCreateOptions["onTextDelta"]>
+  ): Promise<
+    | {
+        done?: boolean;
+        deltaText?: string;
+        payload?: Record<string, unknown>;
+        finalResponse?: XaiResponse;
+      }
+    | undefined
+  > {
+    const dataLines = rawEvent
+      .split("\n")
+      .filter((line) => line.startsWith("data:"))
+      .map((line) => line.slice(5).trimStart());
+
+    if (dataLines.length === 0) {
+      return undefined;
+    }
+
+    const data = dataLines.join("\n");
+
+    if (data === "[DONE]") {
+      return {
+        done: true
+      };
+    }
+
+    const payload = JSON.parse(data) as Record<string, unknown>;
+    const deltaText = this.extractStreamingTextDelta(payload);
+
+    if (deltaText) {
+      await onTextDelta(deltaText);
+    }
+
+    return {
+      deltaText,
+      payload,
+      finalResponse: this.extractFinalStreamingResponse(payload)
+    };
+  }
+
+  private extractStreamingTextDelta(payload: Record<string, unknown>): string | undefined {
+    const directDelta = this.extractTextFragment(payload.delta);
+    if (directDelta) {
+      return directDelta;
+    }
+
+    const choiceDelta = this.extractTextFragment(payload.choices);
+    if (choiceDelta) {
+      return choiceDelta;
+    }
+
+    const contentDelta = this.extractTextFragment(payload.content);
+    return contentDelta || undefined;
+  }
+
+  private extractTextFragment(value: unknown): string {
+    if (typeof value === "string") {
+      return value;
+    }
+
+    if (Array.isArray(value)) {
+      return value
+        .map((item) => this.extractTextFragment(item))
+        .filter((item) => item.length > 0)
+        .join("");
+    }
+
+    if (value && typeof value === "object") {
+      const record = value as Record<string, unknown>;
+
+      if (typeof record.text === "string") {
+        return record.text;
+      }
+
+      if (typeof record.content === "string") {
+        return record.content;
+      }
+
+      if (Array.isArray(record.content)) {
+        return this.extractTextFragment(record.content);
+      }
+    }
+
+    return "";
+  }
+
+  private extractFinalStreamingResponse(
+    payload: Record<string, unknown>
+  ): XaiResponse | undefined {
+    const nestedResponse = payload.response;
+    if (nestedResponse && this.isResponseLike(nestedResponse)) {
+      return nestedResponse;
+    }
+
+    if (this.isResponseLike(payload)) {
+      return payload;
+    }
+
+    return undefined;
+  }
+
+  private isResponseLike(value: unknown): value is XaiResponse {
+    return Boolean(
+      value &&
+        typeof value === "object" &&
+        typeof (value as Record<string, unknown>).id === "string"
+    );
   }
 }
 

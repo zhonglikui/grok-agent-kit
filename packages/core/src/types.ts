@@ -15,6 +15,7 @@ export interface BasePromptOptions {
   temperature?: number;
   previousResponseId?: string;
   store?: boolean;
+  onTextDelta?: (chunk: string) => void | Promise<void>;
   responseOverrides?: Record<string, unknown>;
 }
 

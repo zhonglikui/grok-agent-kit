@@ -26,6 +26,7 @@ export interface XaiResponseCreateRequest {
   include?: string[];
   max_output_tokens?: number;
   temperature?: number;
+  stream?: boolean;
   [key: string]: unknown;
 }
 
@@ -56,9 +57,16 @@ export interface XaiModelListResponse {
   [key: string]: unknown;
 }
 
+export interface XaiResponseCreateOptions {
+  onTextDelta?: (chunk: string) => void | Promise<void>;
+}
+
 export interface XaiTransportLike {
   responses: {
-    create(request: XaiResponseCreateRequest): Promise<XaiResponse>;
+    create(
+      request: XaiResponseCreateRequest,
+      options?: XaiResponseCreateOptions
+    ): Promise<XaiResponse>;
   };
   models: {
     list(): Promise<XaiModelListResponse>;

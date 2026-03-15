@@ -209,4 +209,71 @@ describe("XaiClient", () => {
     expect(sleepMock).toHaveBeenCalledWith(150);
     expect(response.output_text).toBe("Recovered after network retry");
   });
+
+  it("streams response text deltas from SSE and returns the final response", async () => {
+    const encoder = new TextEncoder();
+    const fetchMock = vi.fn().mockResolvedValue(
+      new Response(
+        new ReadableStream({
+          start(controller) {
+            controller.enqueue(
+              encoder.encode(
+                'data: {"type":"response.output_text.delta","delta":"Hello"}\n\n'
+              )
+            );
+            controller.enqueue(
+              encoder.encode(
+                'data: {"type":"response.output_text.delta","delta":" world"}\n\n'
+              )
+            );
+            controller.enqueue(
+              encoder.encode(
+                'data: {"type":"response.completed","response":{"id":"resp_stream","model":"grok-4","output_text":"Hello world","citations":[]}}\n\n'
+              )
+            );
+            controller.enqueue(encoder.encode("data: [DONE]\n\n"));
+            controller.close();
+          }
+        }),
+        {
+          status: 200,
+          headers: {
+            "content-type": "text/event-stream"
+          }
+        }
+      )
+    );
+    const deltas: string[] = [];
+
+    const client = new XaiClient({
+      apiKey: "test-key",
+      baseUrl: "https://api.x.ai/v1",
+      fetch: fetchMock
+    });
+
+    const response = await client.responses.create(
+      {
+        model: "grok-4",
+        input: "Stream please",
+        stream: true
+      },
+      {
+        onTextDelta: async (chunk) => {
+          deltas.push(chunk);
+        }
+      }
+    );
+
+    expect(deltas).toEqual([
+      "Hello",
+      " world"
+    ]);
+    expect(response).toEqual(
+      expect.objectContaining({
+        id: "resp_stream",
+        model: "grok-4",
+        output_text: "Hello world"
+      })
+    );
+  });
 });

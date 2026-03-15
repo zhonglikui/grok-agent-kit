@@ -48,6 +48,9 @@ export async function runCli(argv = process.argv): Promise<void> {
     writeStdout: (value) => {
       process.stdout.write(`${value}\n`);
     },
+    writeStdoutRaw: (value) => {
+      process.stdout.write(value);
+    },
     writeStderr: (value) => {
       process.stderr.write(`${value}\n`);
     }

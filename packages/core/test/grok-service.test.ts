@@ -71,6 +71,44 @@ describe("GrokService", () => {
     expect(result.responseId).toBe("resp_followup");
   });
 
+  it("enables streaming requests when a text-delta callback is provided", async () => {
+    const onTextDelta = vi.fn();
+    const client = {
+      responses: {
+        create: vi.fn().mockResolvedValue({
+          id: "resp_stream",
+          model: "grok-4",
+          output_text: "Hello world",
+          citations: []
+        })
+      },
+      models: {
+        list: vi.fn()
+      }
+    };
+
+    const service = new GrokService({
+      client,
+      defaultModel: "grok-4"
+    });
+
+    const result = await service.chat({
+      prompt: "Stream this",
+      onTextDelta
+    });
+
+    expect(client.responses.create).toHaveBeenCalledWith(
+      expect.objectContaining({
+        model: "grok-4",
+        stream: true
+      }),
+      {
+        onTextDelta
+      }
+    );
+    expect(result.text).toBe("Hello world");
+  });
+
   it("builds an X Search tool payload with handle filters", async () => {
     const client = {
       responses: {

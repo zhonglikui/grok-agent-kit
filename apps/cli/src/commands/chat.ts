@@ -1,6 +1,6 @@
 import { Command } from "commander";
 
-import { renderTextResult } from "../output.js";
+import { renderStreamResult, renderTextResult } from "../output.js";
 import type { CliDependencies } from "../types.js";
 
 export function createChatCommand(dependencies: CliDependencies): Command {
@@ -16,10 +16,15 @@ export function createChatCommand(dependencies: CliDependencies): Command {
       "Continue from a previous xAI response id"
     )
     .option("--no-store", "Do not store the response on xAI")
+    .option("--stream", "Stream text output as it arrives")
     .option("--json", "Print JSON output")
     .action(async (options) => {
       if (options.session && options.store === false) {
         throw new Error("--session cannot be used with --no-store");
+      }
+
+      if (options.stream && options.json) {
+        throw new Error("--stream cannot be used with --json");
       }
 
       if (options.resetSession && !options.session) {
@@ -40,30 +45,50 @@ export function createChatCommand(dependencies: CliDependencies): Command {
         existingSession = await dependencies.sessionStore.get(options.session);
       }
 
+      let streamedText = "";
       const result = await dependencies.service.chat({
         prompt: options.prompt,
         system: options.system,
         model: options.model,
         previousResponseId,
-        store: options.session ? true : options.store
+        store: options.session ? true : options.store,
+        ...(options.stream
+          ? {
+              onTextDelta: async (chunk: string) => {
+                streamedText += chunk;
+                dependencies.writeStdoutRaw(chunk);
+              }
+            }
+          : {})
       });
 
       const nextResponseId = result.responseId ?? existingSession?.responseId;
 
       if (options.session && nextResponseId) {
+        const timestamp = new Date().toISOString();
         await dependencies.sessionStore.set(options.session, {
           responseId: nextResponseId,
-          updatedAt: new Date().toISOString(),
+          updatedAt: timestamp,
           history: [
             ...(existingSession?.history ?? []),
             {
               prompt: options.prompt,
               responseText: result.text,
               responseId: result.responseId,
-              createdAt: new Date().toISOString()
+              createdAt: timestamp
             }
           ]
         });
+      }
+
+      if (options.stream) {
+        renderStreamResult(
+          result,
+          streamedText.length > 0,
+          dependencies.writeStdout,
+          dependencies.writeStdoutRaw
+        );
+        return;
       }
 
       renderTextResult(result, Boolean(options.json), dependencies.writeStdout);

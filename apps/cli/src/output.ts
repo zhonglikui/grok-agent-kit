@@ -24,6 +24,26 @@ export function renderTextResult(
   writeStdout(lines.join("\n"));
 }
 
+export function renderStreamResult(
+  result: GrokTextResult,
+  hasPrintedText: boolean,
+  writeStdout: (value: string) => void,
+  writeStdoutRaw: (value: string) => void
+) {
+  if (!hasPrintedText && result.text) {
+    writeStdoutRaw(result.text);
+  }
+
+  if (result.citations.length > 0) {
+    writeStdout(
+      "\n\nSources:\n" +
+        result.citations
+          .map((citation) => `- ${citation.url ?? JSON.stringify(citation)}`)
+          .join("\n")
+    );
+  }
+}
+
 export function renderModelsResult(
   result: GrokModelsResult,
   json: boolean,

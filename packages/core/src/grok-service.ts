@@ -1,6 +1,7 @@
 import type {
   XaiCitation,
   XaiResponse,
+  XaiResponseCreateOptions,
   XaiResponseCreateRequest,
   XaiToolDefinition
 } from "@grok-agent-kit/xai-client";
@@ -51,9 +52,11 @@ export class GrokService {
       tools.push(this.buildWebSearchTool(options.webSearch));
     }
 
-    const response = await this.client.responses.create(
-      this.buildResponseRequest(options, tools)
-    );
+    const request = this.buildResponseRequest(options, tools);
+    const createOptions = this.buildResponseCreateOptions(options);
+    const response = createOptions
+      ? await this.client.responses.create(request, createOptions)
+      : await this.client.responses.create(request);
 
     return this.toTextResult(response, options.includeRaw);
   }
@@ -65,9 +68,11 @@ export class GrokService {
       "Choose either allowedXHandles or excludedXHandles"
     );
 
-    const response = await this.client.responses.create(
-      this.buildResponseRequest(options, [this.buildXSearchTool(options)])
-    );
+    const request = this.buildResponseRequest(options, [this.buildXSearchTool(options)]);
+    const createOptions = this.buildResponseCreateOptions(options);
+    const response = createOptions
+      ? await this.client.responses.create(request, createOptions)
+      : await this.client.responses.create(request);
 
     return this.toTextResult(response, options.includeRaw);
   }
@@ -79,9 +84,11 @@ export class GrokService {
       "Choose either allowedWebDomains or excludedWebDomains"
     );
 
-    const response = await this.client.responses.create(
-      this.buildResponseRequest(options, [this.buildWebSearchTool(options)])
-    );
+    const request = this.buildResponseRequest(options, [this.buildWebSearchTool(options)]);
+    const createOptions = this.buildResponseCreateOptions(options);
+    const response = createOptions
+      ? await this.client.responses.create(request, createOptions)
+      : await this.client.responses.create(request);
 
     return this.toTextResult(response, options.includeRaw);
   }
@@ -113,9 +120,20 @@ export class GrokService {
         ? { previous_response_id: options.previousResponseId }
         : {}),
       ...(options.store !== undefined ? { store: options.store } : {}),
+      ...(options.onTextDelta ? { stream: true } : {}),
       ...(tools.length > 0 ? { tools } : {}),
       ...(options.responseOverrides ?? {})
     };
+  }
+
+  private buildResponseCreateOptions(
+    options: BasePromptOptions
+  ): XaiResponseCreateOptions | undefined {
+    return options.onTextDelta
+      ? {
+          onTextDelta: options.onTextDelta
+        }
+      : undefined;
   }
 
   private buildInput(prompt: string, system?: string) {
