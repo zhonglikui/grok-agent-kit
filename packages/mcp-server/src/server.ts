@@ -28,10 +28,11 @@ export async function startStdioMcpServer(options?: {
         model: z.string().optional(),
         previousResponseId: z.string().optional(),
         store: z.boolean().optional(),
+        stream: z.boolean().optional(),
         includeRaw: z.boolean().optional()
       }
     },
-    async (args) => handlers.grok_chat(args)
+    async (args, extra) => handlers.grok_chat(args, extra)
   );
 
   server.registerTool(

@@ -5,6 +5,21 @@ import type {
   WebSearchOptions,
   XSearchOptions
 } from "@grok-agent-kit/core";
+import type { RequestHandlerExtra } from "@modelcontextprotocol/sdk/shared/protocol.js";
+import type {
+  ProgressNotification,
+  ServerNotification,
+  ServerRequest
+} from "@modelcontextprotocol/sdk/types.js";
+
+type McpChatInput = ChatOptions & {
+  stream?: boolean;
+};
+
+type ToolHandlerExtra = Pick<
+  RequestHandlerExtra<ServerRequest, ServerNotification>,
+  "_meta" | "sendNotification"
+>;
 
 function renderTextResult(result: GrokTextResult): string {
   const lines = [result.text];
@@ -32,8 +47,33 @@ export function createToolHandlers(service: {
   models: (includeRaw?: boolean) => Promise<GrokModelsResult>;
 }) {
   return {
-    async grok_chat(input: ChatOptions) {
-      return runTextTool(() => service.chat(input));
+    async grok_chat(input: McpChatInput, extra?: ToolHandlerExtra) {
+      const { stream, ...serviceInput } = input;
+      const progressToken = extra?._meta?.progressToken;
+      const sendNotification = extra?.sendNotification;
+
+      if (!stream || progressToken === undefined || sendNotification === undefined) {
+        return runTextTool(() => service.chat(serviceInput));
+      }
+
+      let progress = 0;
+
+      return runTextTool(() =>
+        service.chat({
+          ...serviceInput,
+          onTextDelta: async (chunk) => {
+            progress += 1;
+            await sendNotification({
+              method: "notifications/progress",
+              params: {
+                progressToken,
+                progress,
+                message: chunk
+              }
+            } satisfies ProgressNotification);
+          }
+        })
+      );
     },
 
     async grok_x_search(input: XSearchOptions) {

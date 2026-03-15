@@ -16,6 +16,12 @@
 - [Claude Code](./claude-code.zh-CN.md)
 - [OpenClaw](./openclaw.zh-CN.md)
 
+## 流式说明
+
+- `grok_chat` 现在支持通过 MCP 传入 `stream: true`。
+- 兼容的客户端可请求 MCP progress 通知，并从 `notifications/progress.params.message` 读取文本增量。
+- 不同产品和版本对 progress 通知的渲染支持程度可能不同。
+
 ## 示例配置
 
 - `examples/clients/codex-config.toml`

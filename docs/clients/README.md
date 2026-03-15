@@ -16,6 +16,12 @@ Use these guides to connect `grok-agent-kit` to supported agent clients.
 - [Claude Code](./claude-code.md)
 - [OpenClaw](./openclaw.md)
 
+## Streaming note
+
+- `grok_chat` now supports `stream: true` over MCP.
+- Compatible clients can request MCP progress notifications and read delta text from `notifications/progress.params.message`.
+- Client support for rendering progress notifications varies by product and version.
+
 ## Example configs
 
 - `examples/clients/codex-config.toml`

@@ -61,6 +61,63 @@ describe("createToolHandlers", () => {
     expect(result.structuredContent.citations).toHaveLength(1);
   });
 
+  it("emits progress notifications for streamed chat requests", async () => {
+    const sendNotification = vi.fn().mockResolvedValue(undefined);
+    const service = {
+      chat: vi.fn().mockImplementation(async (input) => {
+        await input.onTextDelta?.("Hello");
+        await input.onTextDelta?.(" world");
+
+        return {
+          text: "Hello world",
+          citations: [],
+          responseId: "resp_stream"
+        };
+      }),
+      xSearch: vi.fn(),
+      webSearch: vi.fn(),
+      models: vi.fn()
+    };
+
+    const handlers = createToolHandlers(service);
+    const result = await handlers.grok_chat(
+      {
+        prompt: "Stream to MCP",
+        stream: true
+      },
+      {
+        _meta: {
+          progressToken: "progress-1"
+        },
+        sendNotification
+      } as never
+    );
+
+    expect(service.chat).toHaveBeenCalledWith(
+      expect.objectContaining({
+        prompt: "Stream to MCP",
+        onTextDelta: expect.any(Function)
+      })
+    );
+    expect(sendNotification).toHaveBeenNthCalledWith(1, {
+      method: "notifications/progress",
+      params: {
+        progressToken: "progress-1",
+        progress: 1,
+        message: "Hello"
+      }
+    });
+    expect(sendNotification).toHaveBeenNthCalledWith(2, {
+      method: "notifications/progress",
+      params: {
+        progressToken: "progress-1",
+        progress: 2,
+        message: " world"
+      }
+    });
+    expect(result.structuredContent.text).toBe("Hello world");
+  });
+
   it("returns structured model output", async () => {
     const service = {
       chat: vi.fn(),
