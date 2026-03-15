@@ -39,9 +39,13 @@ XAI_API_KEY=your_key_here
 XAI_BASE_URL=https://api.x.ai/v1
 GROK_AGENT_KIT_MODEL=grok-4
 GROK_AGENT_KIT_TIMEOUT_MS=30000
+GROK_AGENT_KIT_RETRY_MAX_ATTEMPTS=3
+GROK_AGENT_KIT_RETRY_BASE_DELAY_MS=250
+GROK_AGENT_KIT_RETRY_MAX_DELAY_MS=4000
 ```
 
 `XAI_BASE_URL` is optional and defaults to the official xAI inference base URL.
+`grok-agent-kit` now retries transient rate-limit, timeout, and `5xx` failures by default to make long-running agent workflows more reliable.
 
 ## Quick start
 

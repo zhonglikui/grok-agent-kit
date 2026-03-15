@@ -20,7 +20,12 @@ XAI_API_KEY=your_key_here
 XAI_BASE_URL=https://api.x.ai/v1
 GROK_AGENT_KIT_MODEL=grok-4
 GROK_AGENT_KIT_TIMEOUT_MS=30000
+GROK_AGENT_KIT_RETRY_MAX_ATTEMPTS=3
+GROK_AGENT_KIT_RETRY_BASE_DELAY_MS=250
+GROK_AGENT_KIT_RETRY_MAX_DELAY_MS=4000
 ```
+
+The CLI retries transient rate-limit, timeout, and `5xx` failures by default so long-running MCP agent sessions are less likely to fail on a single flaky request.
 
 ## Supported surfaces
 

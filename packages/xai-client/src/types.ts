@@ -71,4 +71,13 @@ export interface XaiClientOptions {
   fetch?: typeof globalThis.fetch;
   timeoutMs?: number;
   headers?: Record<string, string>;
+  retry?: XaiRetryOptions;
+  sleep?: (ms: number) => Promise<void>;
+}
+
+export interface XaiRetryOptions {
+  maxAttempts?: number;
+  baseDelayMs?: number;
+  maxDelayMs?: number;
+  retryableStatusCodes?: number[];
 }

@@ -1,6 +1,7 @@
 import type {
   XaiCitation,
   XaiModel,
+  XaiRetryOptions,
   XaiTransportLike
 } from "@grok-agent-kit/xai-client";
 
@@ -57,4 +58,5 @@ export interface GrokEnvironmentConfig {
   baseUrl: string;
   defaultModel: string;
   timeoutMs?: number;
+  retry: Required<Pick<XaiRetryOptions, "maxAttempts" | "baseDelayMs" | "maxDelayMs">>;
 }

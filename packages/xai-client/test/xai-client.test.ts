@@ -120,4 +120,93 @@ describe("XaiClient", () => {
       })
     ).rejects.toBeInstanceOf(XaiApiError);
   });
+
+  it("retries retryable HTTP responses and respects Retry-After when present", async () => {
+    const fetchMock = vi
+      .fn()
+      .mockResolvedValueOnce(
+        new Response(JSON.stringify({ error: { message: "rate limited" } }), {
+          status: 429,
+          headers: {
+            "content-type": "application/json",
+            "retry-after": "2"
+          }
+        })
+      )
+      .mockResolvedValueOnce(
+        new Response(
+          JSON.stringify({
+            id: "resp_retry",
+            model: "grok-4",
+            output_text: "Recovered after retry"
+          }),
+          {
+            status: 200,
+            headers: {
+              "content-type": "application/json"
+            }
+          }
+        )
+      );
+    const sleepMock = vi.fn().mockResolvedValue(undefined);
+
+    const client = new XaiClient({
+      apiKey: "test-key",
+      baseUrl: "https://api.x.ai/v1",
+      fetch: fetchMock,
+      sleep: sleepMock
+    });
+
+    const response = await client.responses.create({
+      model: "grok-4",
+      input: "Retry me"
+    });
+
+    expect(fetchMock).toHaveBeenCalledTimes(2);
+    expect(sleepMock).toHaveBeenCalledWith(2000);
+    expect(response.output_text).toBe("Recovered after retry");
+  });
+
+  it("retries transient network failures with exponential backoff", async () => {
+    const fetchMock = vi
+      .fn()
+      .mockRejectedValueOnce(new TypeError("network down"))
+      .mockResolvedValueOnce(
+        new Response(
+          JSON.stringify({
+            id: "resp_network",
+            model: "grok-4",
+            output_text: "Recovered after network retry"
+          }),
+          {
+            status: 200,
+            headers: {
+              "content-type": "application/json"
+            }
+          }
+        )
+      );
+    const sleepMock = vi.fn().mockResolvedValue(undefined);
+
+    const client = new XaiClient({
+      apiKey: "test-key",
+      baseUrl: "https://api.x.ai/v1",
+      fetch: fetchMock,
+      sleep: sleepMock,
+      retry: {
+        maxAttempts: 3,
+        baseDelayMs: 150,
+        maxDelayMs: 1000
+      }
+    });
+
+    const response = await client.responses.create({
+      model: "grok-4",
+      input: "Retry network"
+    });
+
+    expect(fetchMock).toHaveBeenCalledTimes(2);
+    expect(sleepMock).toHaveBeenCalledWith(150);
+    expect(response.output_text).toBe("Recovered after network retry");
+  });
 });
