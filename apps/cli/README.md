@@ -8,6 +8,9 @@ Community-built, unofficial CLI + MCP + skills toolkit for xAI Grok.
 
 ```bash
 npx -y grok-agent-kit chat --prompt "Hello from Grok"
+npx -y grok-agent-kit chat --session notes --prompt "Start a persistent CLI session"
+npx -y grok-agent-kit chat --session notes --prompt "Continue that session"
+npx -y grok-agent-kit sessions list
 npx -y grok-agent-kit x-search --prompt "Latest xAI posts"
 npx -y grok-agent-kit web-search --prompt "Latest xAI docs"
 npx -y grok-agent-kit mcp
@@ -26,6 +29,14 @@ GROK_AGENT_KIT_RETRY_MAX_DELAY_MS=4000
 ```
 
 The CLI retries transient rate-limit, timeout, and `5xx` failures by default so long-running MCP agent sessions are less likely to fail on a single flaky request.
+
+## Local sessions
+
+- `chat --session <name>` continues a named local session
+- `chat --reset-session --session <name>` resets that session before sending the new prompt
+- `chat --previous-response-id <id>` continues from a raw xAI response id
+- `sessions list` shows saved sessions
+- `sessions delete <name>` removes a saved session record
 
 ## Supported surfaces
 

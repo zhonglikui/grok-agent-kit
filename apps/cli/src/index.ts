@@ -5,8 +5,10 @@ import { Command } from "commander";
 import { createChatCommand } from "./commands/chat.js";
 import { createMcpCommand } from "./commands/mcp.js";
 import { createModelsCommand } from "./commands/models.js";
+import { createSessionsCommand } from "./commands/sessions.js";
 import { createWebSearchCommand } from "./commands/web-search.js";
 import { createXSearchCommand } from "./commands/x-search.js";
+import { createFileSessionStore } from "./session-store.js";
 import type { CliDependencies } from "./types.js";
 
 export function buildCli(dependencies: CliDependencies): Command {
@@ -19,6 +21,7 @@ export function buildCli(dependencies: CliDependencies): Command {
     .addCommand(createXSearchCommand(dependencies))
     .addCommand(createWebSearchCommand(dependencies))
     .addCommand(createModelsCommand(dependencies))
+    .addCommand(createSessionsCommand(dependencies))
     .addCommand(createMcpCommand(dependencies));
 
   return program;
@@ -38,6 +41,7 @@ export async function runCli(argv = process.argv): Promise<void> {
       webSearch: async (input) => getService().webSearch(input),
       models: async (includeRaw) => getService().models(includeRaw)
     },
+    sessionStore: createFileSessionStore(),
     startMcpServer: async () => {
       await startStdioMcpServer({ service: getService() });
     },

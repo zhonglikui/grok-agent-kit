@@ -13,6 +13,8 @@ export interface BasePromptOptions {
   includeRaw?: boolean;
   maxOutputTokens?: number;
   temperature?: number;
+  previousResponseId?: string;
+  store?: boolean;
   responseOverrides?: Record<string, unknown>;
 }
 
@@ -38,6 +40,7 @@ export interface ChatOptions extends BasePromptOptions {
 
 export interface GrokTextResult {
   text: string;
+  responseId?: string;
   model?: string;
   citations: XaiCitation[];
   raw?: unknown;

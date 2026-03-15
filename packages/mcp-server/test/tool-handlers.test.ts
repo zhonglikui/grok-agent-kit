@@ -7,7 +7,8 @@ describe("createToolHandlers", () => {
     const service = {
       chat: vi.fn().mockResolvedValue({
         text: "chat result",
-        citations: []
+        citations: [],
+        responseId: "resp_chat"
       }),
       xSearch: vi.fn(),
       webSearch: vi.fn(),
@@ -16,15 +17,20 @@ describe("createToolHandlers", () => {
 
     const handlers = createToolHandlers(service);
     const result = await handlers.grok_chat({
-      prompt: "Say hi"
+      prompt: "Say hi",
+      previousResponseId: "resp_prev",
+      store: true
     });
 
     expect(service.chat).toHaveBeenCalledWith(
       expect.objectContaining({
-        prompt: "Say hi"
+        prompt: "Say hi",
+        previousResponseId: "resp_prev",
+        store: true
       })
     );
     expect(result.structuredContent.text).toBe("chat result");
+    expect(result.structuredContent.responseId).toBe("resp_chat");
   });
 
   it("returns structured X Search output", async () => {

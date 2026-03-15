@@ -31,3 +31,12 @@ env = { XAI_API_KEY = "YOUR_XAI_API_KEY" }
 Codex 不会像 Claude Code 那样直接消费 `SKILL.md`，因此建议把下面这类说明写进项目 `AGENTS.md` 或你的个人提示词里：
 
 > Use `grok_x_search` for live X content, `grok_web_search` for docs and web grounding, and `grok_chat` only after search when synthesis is needed. Prefer sources with citations and tighten domain or handle filters before broadening.
+
+## 有状态 MCP 用法
+
+当 Codex 需要跨多次工具调用保留连续上下文时，可以传：
+
+- `previousResponseId`：继续之前的 xAI 响应链
+- `store: true`：让当前这次响应后续还能继续被续接
+
+如果是在本地终端直接使用而不是通过 MCP，优先用 `grok-agent-kit chat --session <name>`。

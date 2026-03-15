@@ -31,3 +31,12 @@ env = { XAI_API_KEY = "YOUR_XAI_API_KEY" }
 Codex does not consume Claude-style `SKILL.md` files directly, so add guidance to your project `AGENTS.md` or personal prompt instructions:
 
 > Use `grok_x_search` for live X content, `grok_web_search` for docs and web grounding, and `grok_chat` only after search when synthesis is needed. Prefer sources with citations and tighten domain or handle filters before broadening.
+
+## Stateful MCP usage
+
+When Codex needs continuity across tool calls, pass:
+
+- `previousResponseId` to continue an earlier xAI response chain
+- `store: true` when the follow-up should remain resumable
+
+For local terminal usage outside MCP, prefer `grok-agent-kit chat --session <name>`.

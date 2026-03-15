@@ -9,13 +9,48 @@ export function createChatCommand(dependencies: CliDependencies): Command {
     .requiredOption("--prompt <prompt>", "Prompt text")
     .option("--system <system>", "System prompt")
     .option("--model <model>", "Override model")
+    .option("--session <name>", "Continue or create a named local session")
+    .option("--reset-session", "Reset the named session before sending the prompt")
+    .option(
+      "--previous-response-id <id>",
+      "Continue from a previous xAI response id"
+    )
+    .option("--no-store", "Do not store the response on xAI")
     .option("--json", "Print JSON output")
     .action(async (options) => {
+      if (options.session && options.store === false) {
+        throw new Error("--session cannot be used with --no-store");
+      }
+
+      if (options.resetSession && !options.session) {
+        throw new Error("--reset-session requires --session");
+      }
+
+      if (options.resetSession && options.session) {
+        await dependencies.sessionStore.delete(options.session);
+      }
+
+      let previousResponseId = options.previousResponseId as string | undefined;
+
+      if (!previousResponseId && options.session) {
+        const session = await dependencies.sessionStore.get(options.session);
+        previousResponseId = session?.responseId;
+      }
+
       const result = await dependencies.service.chat({
         prompt: options.prompt,
         system: options.system,
-        model: options.model
+        model: options.model,
+        previousResponseId,
+        store: options.session ? true : options.store
       });
+
+      if (options.session && result.responseId) {
+        await dependencies.sessionStore.set(options.session, {
+          responseId: result.responseId,
+          updatedAt: new Date().toISOString()
+        });
+      }
 
       renderTextResult(result, Boolean(options.json), dependencies.writeStdout);
     });

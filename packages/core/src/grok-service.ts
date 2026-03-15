@@ -109,6 +109,10 @@ export class GrokService {
       ...(options.temperature !== undefined
         ? { temperature: options.temperature }
         : {}),
+      ...(options.previousResponseId
+        ? { previous_response_id: options.previousResponseId }
+        : {}),
+      ...(options.store !== undefined ? { store: options.store } : {}),
       ...(tools.length > 0 ? { tools } : {}),
       ...(options.responseOverrides ?? {})
     };
@@ -188,6 +192,7 @@ export class GrokService {
   private toTextResult(response: XaiResponse, includeRaw = false): GrokTextResult {
     return {
       text: this.extractText(response),
+      responseId: response.id,
       model: response.model,
       citations: this.normalizeCitations(response.citations),
       ...(includeRaw ? { raw: response } : {})

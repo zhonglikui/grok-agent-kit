@@ -16,6 +16,7 @@
 - `grok-agent-kit x-search`
 - `grok-agent-kit web-search`
 - `grok-agent-kit models`
+- `grok-agent-kit sessions`
 - `grok-agent-kit mcp`
 
 MCP 服务端暴露以下工具：
@@ -52,8 +53,11 @@ GROK_AGENT_KIT_RETRY_MAX_DELAY_MS=4000
 
 ```bash
 npx -y grok-agent-kit chat --prompt "Hello from Grok"
+npx -y grok-agent-kit chat --session research --prompt "Summarize the latest Grok updates"
+npx -y grok-agent-kit chat --session research --prompt "Turn that into a release note draft"
 npx -y grok-agent-kit x-search --prompt "Latest xAI posts"
 npx -y grok-agent-kit web-search --prompt "Latest xAI docs"
+npx -y grok-agent-kit sessions list
 npx -y grok-agent-kit models
 npx -y grok-agent-kit mcp
 ```
@@ -65,8 +69,19 @@ npm install
 npm test
 npm run build
 node apps/cli/dist/bin.js chat --prompt "Summarize Grok search"
+node apps/cli/dist/bin.js chat --session demo --prompt "Start a local-first conversation"
+node apps/cli/dist/bin.js sessions list
 node apps/cli/dist/bin.js mcp
 ```
+
+## 会话连续性
+
+`grok-agent-kit` 现在支持 CLI 的本地会话持久化，以及 MCP 客户端显式传入响应链路状态。
+
+- 用 `chat --session <name>` 在多次调用之间继续同一个本地命名会话。
+- 用 `chat --reset-session --session <name>` 重置并重新开始该命名会话。
+- 用 `sessions list` 和 `sessions delete <name>` 管理本地会话元数据。
+- MCP 客户端可在 `grok_chat`、`grok_x_search`、`grok_web_search` 中传入 `previousResponseId` 和 `store` 来显式续接上下文。
 
 ## 客户端接入文档
 

@@ -16,6 +16,7 @@ Community-built, unofficial CLI + MCP + skills toolkit for xAI Grok.
 - `grok-agent-kit x-search`
 - `grok-agent-kit web-search`
 - `grok-agent-kit models`
+- `grok-agent-kit sessions`
 - `grok-agent-kit mcp`
 
 The MCP server exposes:
@@ -53,8 +54,11 @@ Run directly from npm after publication:
 
 ```bash
 npx -y grok-agent-kit chat --prompt "Hello from Grok"
+npx -y grok-agent-kit chat --session research --prompt "Summarize the latest Grok updates"
+npx -y grok-agent-kit chat --session research --prompt "Turn that into a release note draft"
 npx -y grok-agent-kit x-search --prompt "Latest xAI posts"
 npx -y grok-agent-kit web-search --prompt "Latest xAI docs"
+npx -y grok-agent-kit sessions list
 npx -y grok-agent-kit models
 npx -y grok-agent-kit mcp
 ```
@@ -66,8 +70,19 @@ npm install
 npm test
 npm run build
 node apps/cli/dist/bin.js chat --prompt "Summarize Grok search"
+node apps/cli/dist/bin.js chat --session demo --prompt "Start a local-first conversation"
+node apps/cli/dist/bin.js sessions list
 node apps/cli/dist/bin.js mcp
 ```
+
+## Conversation continuity
+
+`grok-agent-kit` now supports local conversation persistence for the CLI and explicit response chaining for MCP clients.
+
+- Use `chat --session <name>` to continue a named local session across invocations.
+- Use `chat --reset-session --session <name>` to start that named session over.
+- Use `sessions list` and `sessions delete <name>` to manage local session metadata.
+- MCP clients can pass `previousResponseId` and `store` to `grok_chat`, `grok_x_search`, and `grok_web_search` when they want explicit continuity.
 
 ## Client setup docs
 

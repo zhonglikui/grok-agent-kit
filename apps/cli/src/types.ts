@@ -6,6 +6,8 @@ import type {
   XSearchOptions
 } from "@grok-agent-kit/core";
 
+import type { SessionStore } from "./session-store.js";
+
 export interface CliService {
   chat(input: ChatOptions): Promise<GrokTextResult>;
   xSearch(input: XSearchOptions): Promise<GrokTextResult>;
@@ -15,6 +17,7 @@ export interface CliService {
 
 export interface CliDependencies {
   service: CliService;
+  sessionStore: SessionStore;
   startMcpServer: () => Promise<void>;
   writeStdout: (value: string) => void;
   writeStderr: (value: string) => void;

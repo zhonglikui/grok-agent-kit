@@ -36,6 +36,41 @@ describe("GrokService", () => {
     expect(result.text).toBe("chat reply");
   });
 
+  it("passes through stateful response fields and returns responseId", async () => {
+    const client = {
+      responses: {
+        create: vi.fn().mockResolvedValue({
+          id: "resp_followup",
+          model: "grok-4",
+          output_text: "continued reply",
+          citations: []
+        })
+      },
+      models: {
+        list: vi.fn()
+      }
+    };
+
+    const service = new GrokService({
+      client,
+      defaultModel: "grok-4"
+    });
+
+    const result = await service.chat({
+      prompt: "Continue the thread",
+      previousResponseId: "resp_prior",
+      store: true
+    });
+
+    expect(client.responses.create).toHaveBeenCalledWith(
+      expect.objectContaining({
+        previous_response_id: "resp_prior",
+        store: true
+      })
+    );
+    expect(result.responseId).toBe("resp_followup");
+  });
+
   it("builds an X Search tool payload with handle filters", async () => {
     const client = {
       responses: {

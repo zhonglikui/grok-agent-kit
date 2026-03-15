@@ -26,6 +26,8 @@ export async function startStdioMcpServer(options?: {
         prompt: z.string(),
         system: z.string().optional(),
         model: z.string().optional(),
+        previousResponseId: z.string().optional(),
+        store: z.boolean().optional(),
         includeRaw: z.boolean().optional()
       }
     },
@@ -40,6 +42,8 @@ export async function startStdioMcpServer(options?: {
       inputSchema: {
         prompt: z.string(),
         model: z.string().optional(),
+        previousResponseId: z.string().optional(),
+        store: z.boolean().optional(),
         allowedXHandles: z.array(z.string()).optional(),
         excludedXHandles: z.array(z.string()).optional(),
         includeRaw: z.boolean().optional(),
@@ -58,6 +62,8 @@ export async function startStdioMcpServer(options?: {
       inputSchema: {
         prompt: z.string(),
         model: z.string().optional(),
+        previousResponseId: z.string().optional(),
+        store: z.boolean().optional(),
         allowedWebDomains: z.array(z.string()).optional(),
         excludedWebDomains: z.array(z.string()).optional(),
         includeRaw: z.boolean().optional(),

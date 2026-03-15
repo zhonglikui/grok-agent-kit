@@ -37,6 +37,7 @@ export function createToolHandlers(service: {
       const structuredContent: Record<string, unknown> = {
         text: result.text,
         citations: result.citations,
+        ...(result.responseId ? { responseId: result.responseId } : {}),
         ...(result.model ? { model: result.model } : {}),
         ...(result.raw !== undefined ? { raw: result.raw } : {})
       };
@@ -57,6 +58,7 @@ export function createToolHandlers(service: {
       const structuredContent: Record<string, unknown> = {
         text: result.text,
         citations: result.citations,
+        ...(result.responseId ? { responseId: result.responseId } : {}),
         ...(result.model ? { model: result.model } : {}),
         ...(result.raw !== undefined ? { raw: result.raw } : {})
       };
@@ -77,6 +79,7 @@ export function createToolHandlers(service: {
       const structuredContent: Record<string, unknown> = {
         text: result.text,
         citations: result.citations,
+        ...(result.responseId ? { responseId: result.responseId } : {}),
         ...(result.model ? { model: result.model } : {}),
         ...(result.raw !== undefined ? { raw: result.raw } : {})
       };

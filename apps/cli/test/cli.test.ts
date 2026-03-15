@@ -7,7 +7,8 @@ describe("CLI", () => {
     const service = {
       chat: vi.fn().mockResolvedValue({
         text: "chat output",
-        citations: []
+        citations: [],
+        responseId: "resp_chat"
       }),
       xSearch: vi.fn(),
       webSearch: vi.fn(),
@@ -17,6 +18,12 @@ describe("CLI", () => {
 
     const cli = buildCli({
       service,
+      sessionStore: {
+        get: vi.fn(),
+        list: vi.fn(),
+        set: vi.fn(),
+        delete: vi.fn()
+      },
       startMcpServer: vi.fn(),
       writeStdout: (value) => stdout.push(value),
       writeStderr: vi.fn()
@@ -52,6 +59,12 @@ describe("CLI", () => {
 
     const cli = buildCli({
       service,
+      sessionStore: {
+        get: vi.fn(),
+        list: vi.fn(),
+        set: vi.fn(),
+        delete: vi.fn()
+      },
       startMcpServer: vi.fn(),
       writeStdout: (value) => stdout.push(value),
       writeStderr: vi.fn()
@@ -83,6 +96,12 @@ describe("CLI", () => {
         webSearch: vi.fn(),
         models: vi.fn()
       },
+      sessionStore: {
+        get: vi.fn(),
+        list: vi.fn(),
+        set: vi.fn(),
+        delete: vi.fn()
+      },
       startMcpServer,
       writeStdout: vi.fn(),
       writeStderr: vi.fn()
@@ -107,6 +126,12 @@ describe("CLI", () => {
         webSearch: serviceTrap,
         models: serviceTrap
       },
+      sessionStore: {
+        get: vi.fn(),
+        list: vi.fn(),
+        set: vi.fn(),
+        delete: vi.fn()
+      },
       startMcpServer,
       writeStdout: vi.fn(),
       writeStderr: vi.fn()
@@ -122,5 +147,106 @@ describe("CLI", () => {
 
     expect(serviceTrap).not.toHaveBeenCalled();
     expect(startMcpServer).not.toHaveBeenCalled();
+  });
+
+  it("continues a named chat session and stores the new response id", async () => {
+    const service = {
+      chat: vi.fn().mockResolvedValue({
+        text: "continued output",
+        citations: [],
+        responseId: "resp_next"
+      }),
+      xSearch: vi.fn(),
+      webSearch: vi.fn(),
+      models: vi.fn()
+    };
+    const sessionStore = {
+      get: vi.fn().mockResolvedValue({
+        name: "alpha",
+        responseId: "resp_prev",
+        updatedAt: "2026-03-15T00:00:00.000Z"
+      }),
+      list: vi.fn(),
+      set: vi.fn().mockResolvedValue(undefined),
+      delete: vi.fn()
+    };
+
+    const cli = buildCli({
+      service,
+      sessionStore,
+      startMcpServer: vi.fn(),
+      writeStdout: vi.fn(),
+      writeStderr: vi.fn()
+    });
+
+    await cli.parseAsync([
+      "node",
+      "grok-agent-kit",
+      "chat",
+      "--prompt",
+      "Continue",
+      "--session",
+      "alpha"
+    ]);
+
+    expect(service.chat).toHaveBeenCalledWith(
+      expect.objectContaining({
+        prompt: "Continue",
+        previousResponseId: "resp_prev",
+        store: true
+      })
+    );
+    expect(sessionStore.set).toHaveBeenCalledWith(
+      "alpha",
+      expect.objectContaining({
+        responseId: "resp_next"
+      })
+    );
+  });
+
+  it("lists and deletes local sessions", async () => {
+    const stdout: string[] = [];
+    const sessionStore = {
+      get: vi.fn(),
+      list: vi.fn().mockResolvedValue([
+        {
+          name: "alpha",
+          responseId: "resp_alpha",
+          updatedAt: "2026-03-15T01:00:00.000Z"
+        }
+      ]),
+      set: vi.fn(),
+      delete: vi.fn().mockResolvedValue(undefined)
+    };
+
+    const cli = buildCli({
+      service: {
+        chat: vi.fn(),
+        xSearch: vi.fn(),
+        webSearch: vi.fn(),
+        models: vi.fn()
+      },
+      sessionStore,
+      startMcpServer: vi.fn(),
+      writeStdout: (value) => stdout.push(value),
+      writeStderr: vi.fn()
+    });
+
+    await cli.parseAsync([
+      "node",
+      "grok-agent-kit",
+      "sessions",
+      "list"
+    ]);
+    await cli.parseAsync([
+      "node",
+      "grok-agent-kit",
+      "sessions",
+      "delete",
+      "alpha"
+    ]);
+
+    expect(stdout[0]).toContain("alpha");
+    expect(sessionStore.delete).toHaveBeenCalledWith("alpha");
   });
 });
