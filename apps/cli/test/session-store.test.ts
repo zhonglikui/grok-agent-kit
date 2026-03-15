@@ -1,4 +1,4 @@
-import { mkdtempSync, rmSync } from "node:fs";
+import { mkdtempSync, rmSync, writeFileSync } from "node:fs";
 import { tmpdir } from "node:os";
 import { join } from "node:path";
 
@@ -35,7 +35,8 @@ describe("createFileSessionStore", () => {
     await expect(store.get("alpha")).resolves.toEqual({
       name: "alpha",
       responseId: "resp_123",
-      updatedAt: "2026-03-15T00:00:00.000Z"
+      updatedAt: "2026-03-15T00:00:00.000Z",
+      history: []
     });
   });
 
@@ -55,12 +56,14 @@ describe("createFileSessionStore", () => {
       {
         name: "newer",
         responseId: "resp_new",
-        updatedAt: "2026-03-15T01:00:00.000Z"
+        updatedAt: "2026-03-15T01:00:00.000Z",
+        history: []
       },
       {
         name: "older",
         responseId: "resp_old",
-        updatedAt: "2026-03-15T00:00:00.000Z"
+        updatedAt: "2026-03-15T00:00:00.000Z",
+        history: []
       }
     ]);
   });
@@ -76,5 +79,64 @@ describe("createFileSessionStore", () => {
     await store.delete("alpha");
 
     await expect(store.get("alpha")).resolves.toBeUndefined();
+  });
+
+  it("persists local history entries for a session", async () => {
+    const store = createTempSessionStore();
+
+    await store.set("alpha", {
+      responseId: "resp_123",
+      updatedAt: "2026-03-16T00:00:00.000Z",
+      history: [
+        {
+          prompt: "Hello",
+          responseText: "Hi there",
+          responseId: "resp_123",
+          createdAt: "2026-03-16T00:00:00.000Z"
+        }
+      ]
+    });
+
+    await expect(store.get("alpha")).resolves.toEqual({
+      name: "alpha",
+      responseId: "resp_123",
+      updatedAt: "2026-03-16T00:00:00.000Z",
+      history: [
+        {
+          prompt: "Hello",
+          responseText: "Hi there",
+          responseId: "resp_123",
+          createdAt: "2026-03-16T00:00:00.000Z"
+        }
+      ]
+    });
+  });
+
+  it("treats missing history as an empty list for older session files", async () => {
+    const directory = mkdtempSync(join(tmpdir(), "grok-agent-kit-session-store-"));
+    tempDirectories.push(directory);
+    writeFileSync(
+      join(directory, "sessions.json"),
+      JSON.stringify({
+        sessions: {
+          legacy: {
+            responseId: "resp_legacy",
+            updatedAt: "2026-03-16T00:00:00.000Z"
+          }
+        }
+      }),
+      "utf8"
+    );
+
+    const store = createFileSessionStore({
+      baseDirectory: directory
+    });
+
+    await expect(store.get("legacy")).resolves.toEqual({
+      name: "legacy",
+      responseId: "resp_legacy",
+      updatedAt: "2026-03-16T00:00:00.000Z",
+      history: []
+    });
   });
 });

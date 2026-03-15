@@ -30,11 +30,14 @@ export function createChatCommand(dependencies: CliDependencies): Command {
         await dependencies.sessionStore.delete(options.session);
       }
 
+      let existingSession = undefined;
       let previousResponseId = options.previousResponseId as string | undefined;
 
       if (!previousResponseId && options.session) {
-        const session = await dependencies.sessionStore.get(options.session);
-        previousResponseId = session?.responseId;
+        existingSession = await dependencies.sessionStore.get(options.session);
+        previousResponseId = existingSession?.responseId;
+      } else if (options.session) {
+        existingSession = await dependencies.sessionStore.get(options.session);
       }
 
       const result = await dependencies.service.chat({
@@ -45,10 +48,21 @@ export function createChatCommand(dependencies: CliDependencies): Command {
         store: options.session ? true : options.store
       });
 
-      if (options.session && result.responseId) {
+      const nextResponseId = result.responseId ?? existingSession?.responseId;
+
+      if (options.session && nextResponseId) {
         await dependencies.sessionStore.set(options.session, {
-          responseId: result.responseId,
-          updatedAt: new Date().toISOString()
+          responseId: nextResponseId,
+          updatedAt: new Date().toISOString(),
+          history: [
+            ...(existingSession?.history ?? []),
+            {
+              prompt: options.prompt,
+              responseText: result.text,
+              responseId: result.responseId,
+              createdAt: new Date().toISOString()
+            }
+          ]
         });
       }
 

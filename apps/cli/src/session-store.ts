@@ -6,6 +6,14 @@ export interface SessionRecord {
   name: string;
   responseId: string;
   updatedAt: string;
+  history: SessionHistoryEntry[];
+}
+
+export interface SessionHistoryEntry {
+  prompt: string;
+  responseText: string;
+  responseId?: string;
+  createdAt: string;
 }
 
 export interface SessionStore {
@@ -19,7 +27,12 @@ export interface SessionStore {
 }
 
 interface SessionStoreFileShape {
-  sessions?: Record<string, Omit<SessionRecord, "name">>;
+  sessions?: Record<
+    string,
+    Omit<SessionRecord, "name"> & {
+      history?: SessionHistoryEntry[];
+    }
+  >;
 }
 
 export function createFileSessionStore(options?: {
@@ -34,20 +47,23 @@ export function createFileSessionStore(options?: {
     async get(name) {
       const data = await readStore(filePath);
       const record = data.sessions?.[name];
-      return record ? { name, ...record } : undefined;
+      return record ? toSessionRecord(name, record) : undefined;
     },
 
     async list() {
       const data = await readStore(filePath);
       return Object.entries(data.sessions ?? {})
-        .map(([name, record]) => ({ name, ...record }))
+        .map(([name, record]) => toSessionRecord(name, record))
         .sort((left, right) => right.updatedAt.localeCompare(left.updatedAt));
     },
 
     async set(name, value) {
       const data = await readStore(filePath);
       data.sessions ??= {};
-      data.sessions[name] = value;
+      data.sessions[name] = {
+        ...value,
+        history: value.history ?? []
+      };
       await writeStore(filePath, data);
     },
 
@@ -86,4 +102,18 @@ async function writeStore(
 ): Promise<void> {
   await mkdir(dirname(filePath), { recursive: true });
   await writeFile(filePath, JSON.stringify(data, null, 2), "utf8");
+}
+
+function toSessionRecord(
+  name: string,
+  record: Omit<SessionRecord, "name"> & {
+    history?: SessionHistoryEntry[];
+  }
+): SessionRecord {
+  return {
+    name,
+    responseId: record.responseId,
+    updatedAt: record.updatedAt,
+    history: record.history ?? []
+  };
 }

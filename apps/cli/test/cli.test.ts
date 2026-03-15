@@ -164,7 +164,15 @@ describe("CLI", () => {
       get: vi.fn().mockResolvedValue({
         name: "alpha",
         responseId: "resp_prev",
-        updatedAt: "2026-03-15T00:00:00.000Z"
+        updatedAt: "2026-03-15T00:00:00.000Z",
+        history: [
+          {
+            prompt: "Earlier prompt",
+            responseText: "Earlier response",
+            responseId: "resp_prev",
+            createdAt: "2026-03-15T00:00:00.000Z"
+          }
+        ]
       }),
       list: vi.fn(),
       set: vi.fn().mockResolvedValue(undefined),
@@ -199,7 +207,14 @@ describe("CLI", () => {
     expect(sessionStore.set).toHaveBeenCalledWith(
       "alpha",
       expect.objectContaining({
-        responseId: "resp_next"
+        responseId: "resp_next",
+        history: expect.arrayContaining([
+          expect.objectContaining({
+            prompt: "Continue",
+            responseText: "continued output",
+            responseId: "resp_next"
+          })
+        ])
       })
     );
   });
@@ -248,5 +263,51 @@ describe("CLI", () => {
 
     expect(stdout[0]).toContain("alpha");
     expect(sessionStore.delete).toHaveBeenCalledWith("alpha");
+  });
+
+  it("shows the local transcript for a saved session", async () => {
+    const stdout: string[] = [];
+    const sessionStore = {
+      get: vi.fn().mockResolvedValue({
+        name: "alpha",
+        responseId: "resp_alpha",
+        updatedAt: "2026-03-16T02:00:00.000Z",
+        history: [
+          {
+            prompt: "Hello",
+            responseText: "Hi there",
+            responseId: "resp_alpha",
+            createdAt: "2026-03-16T02:00:00.000Z"
+          }
+        ]
+      }),
+      list: vi.fn(),
+      set: vi.fn(),
+      delete: vi.fn()
+    };
+
+    const cli = buildCli({
+      service: {
+        chat: vi.fn(),
+        xSearch: vi.fn(),
+        webSearch: vi.fn(),
+        models: vi.fn()
+      },
+      sessionStore,
+      startMcpServer: vi.fn(),
+      writeStdout: (value) => stdout.push(value),
+      writeStderr: vi.fn()
+    });
+
+    await cli.parseAsync([
+      "node",
+      "grok-agent-kit",
+      "sessions",
+      "show",
+      "alpha"
+    ]);
+
+    expect(stdout[0]).toContain("Hello");
+    expect(stdout[0]).toContain("Hi there");
   });
 });

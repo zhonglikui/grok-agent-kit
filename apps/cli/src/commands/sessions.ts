@@ -43,5 +43,38 @@ export function createSessionsCommand(dependencies: CliDependencies): Command {
       dependencies.writeStdout(`Deleted session ${name}`);
     });
 
+  command
+    .command("show")
+    .description("Show the local transcript for a saved chat session")
+    .argument("<name>", "Session name")
+    .action(async (name: string) => {
+      const session = await dependencies.sessionStore.get(name);
+
+      if (!session) {
+        dependencies.writeStdout(`Session ${name} not found.`);
+        return;
+      }
+
+      if (session.history.length === 0) {
+        dependencies.writeStdout(
+          `${session.name}\nLast response: ${session.responseId}\nUpdated: ${session.updatedAt}\n\nNo local history recorded yet.`
+        );
+        return;
+      }
+
+      const transcript = session.history
+        .map(
+          (entry) =>
+            `[${entry.createdAt}]\nUser: ${entry.prompt}\nAssistant: ${entry.responseText}${
+              entry.responseId ? `\nResponse ID: ${entry.responseId}` : ""
+            }`
+        )
+        .join("\n\n");
+
+      dependencies.writeStdout(
+        `${session.name}\nLast response: ${session.responseId}\nUpdated: ${session.updatedAt}\n\n${transcript}`
+      );
+    });
+
   return command;
 }
