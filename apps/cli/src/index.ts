@@ -3,6 +3,7 @@ import { startStdioMcpServer } from "@grok-agent-kit/mcp-server";
 import { Command } from "commander";
 
 import { createChatCommand } from "./commands/chat.js";
+import { createDoctorCommand } from "./commands/doctor.js";
 import { createMcpCommand } from "./commands/mcp.js";
 import { createModelsCommand } from "./commands/models.js";
 import { createSessionsCommand } from "./commands/sessions.js";
@@ -18,6 +19,7 @@ export function buildCli(dependencies: CliDependencies): Command {
     .name("grok-agent-kit")
     .description("CLI + MCP + skills for xAI Grok")
     .addCommand(createChatCommand(dependencies))
+    .addCommand(createDoctorCommand(dependencies))
     .addCommand(createXSearchCommand(dependencies))
     .addCommand(createWebSearchCommand(dependencies))
     .addCommand(createModelsCommand(dependencies))

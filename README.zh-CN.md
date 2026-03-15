@@ -13,6 +13,7 @@
 ## 提供的能力
 
 - `grok-agent-kit chat`
+- `grok-agent-kit doctor`
 - `grok-agent-kit x-search`
 - `grok-agent-kit web-search`
 - `grok-agent-kit models`
@@ -53,6 +54,7 @@ GROK_AGENT_KIT_RETRY_MAX_DELAY_MS=4000
 
 ```bash
 npx -y grok-agent-kit chat --prompt "Hello from Grok"
+npx -y grok-agent-kit doctor
 npx -y grok-agent-kit chat --prompt "Stream a quick summary" --stream
 npx -y grok-agent-kit chat --session research --prompt "Summarize the latest Grok updates"
 npx -y grok-agent-kit chat --session research --prompt "Turn that into a release note draft"
@@ -74,6 +76,7 @@ npx -y grok-agent-kit mcp
 npm install
 npm test
 npm run build
+node apps/cli/dist/bin.js doctor
 node apps/cli/dist/bin.js chat --prompt "Summarize Grok search"
 node apps/cli/dist/bin.js chat --prompt "Stream a local reply" --stream
 node apps/cli/dist/bin.js chat --session demo --prompt "Start a local-first conversation"
@@ -99,6 +102,18 @@ node apps/cli/dist/bin.js mcp
 - 用 `sessions list` 和 `sessions delete <name>` 管理本地会话元数据。
 - MCP 客户端可在 `grok_chat`、`grok_x_search`、`grok_web_search` 中传入 `previousResponseId` 和 `store` 来显式续接上下文。
 - MCP 客户端可对 `grok_chat` 传入 `stream: true`，并请求 MCP progress 通知，以便从 `notifications/progress.params.message` 接收文本增量。
+
+## 诊断
+
+可先运行 `grok-agent-kit doctor` 检查本地环境，再使用 chat、search 或 MCP。
+
+当前会检查：
+
+- 是否使用受支持的 Node.js 版本
+- `XAI_API_KEY` 是否存在
+- `XAI_BASE_URL` 是否为有效 URL
+- `GROK_AGENT_KIT_MODEL` 是否为空或将回退默认值
+- 本地状态目录与 `sessions.json` 是否可读
 
 ## 客户端接入文档
 

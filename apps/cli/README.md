@@ -8,6 +8,7 @@ Community-built, unofficial CLI + MCP + skills toolkit for xAI Grok.
 
 ```bash
 npx -y grok-agent-kit chat --prompt "Hello from Grok"
+npx -y grok-agent-kit doctor
 npx -y grok-agent-kit chat --prompt "Stream a quick summary" --stream
 npx -y grok-agent-kit chat --session notes --prompt "Start a persistent CLI session"
 npx -y grok-agent-kit chat --session notes --prompt "Continue that session"
@@ -35,6 +36,11 @@ GROK_AGENT_KIT_RETRY_MAX_DELAY_MS=4000
 ```
 
 The CLI retries transient rate-limit, timeout, and `5xx` failures by default so long-running MCP agent sessions are less likely to fail on a single flaky request.
+
+## Doctor
+
+- `doctor` checks local environment and state-path basics before you start using chat, search, or MCP
+- current checks include Node.js version, `XAI_API_KEY`, `XAI_BASE_URL`, `GROK_AGENT_KIT_MODEL`, and local `sessions.json` readability
 
 ## Local sessions
 

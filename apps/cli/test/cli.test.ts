@@ -46,6 +46,84 @@ describe("CLI", () => {
     expect(stdout[0]).toContain("chat output");
   });
 
+  it("reports a missing XAI_API_KEY in doctor output", async () => {
+    const stdout: string[] = [];
+    vi.stubEnv("XAI_API_KEY", "");
+    vi.stubEnv("XAI_BASE_URL", "https://api.x.ai/v1");
+    vi.stubEnv("GROK_AGENT_KIT_MODEL", "grok-4");
+
+    try {
+      const cli = buildCli({
+        service: {
+          chat: vi.fn(),
+          xSearch: vi.fn(),
+          webSearch: vi.fn(),
+          models: vi.fn()
+        },
+        sessionStore: {
+          get: vi.fn(),
+          list: vi.fn(),
+          set: vi.fn(),
+          delete: vi.fn()
+        },
+        startMcpServer: vi.fn(),
+        writeStdout: (value) => stdout.push(value),
+        writeStdoutRaw: (value) => stdout.push(value),
+        writeStderr: vi.fn()
+      });
+
+      await cli.parseAsync([
+        "node",
+        "grok-agent-kit",
+        "doctor"
+      ]);
+    } finally {
+      vi.unstubAllEnvs();
+    }
+
+    expect(stdout[0]).toContain("FAIL");
+    expect(stdout[0]).toContain("XAI_API_KEY");
+  });
+
+  it("reports a healthy doctor summary when required env is present", async () => {
+    const stdout: string[] = [];
+    vi.stubEnv("XAI_API_KEY", "test-key");
+    vi.stubEnv("XAI_BASE_URL", "https://api.x.ai/v1");
+    vi.stubEnv("GROK_AGENT_KIT_MODEL", "grok-4");
+
+    try {
+      const cli = buildCli({
+        service: {
+          chat: vi.fn(),
+          xSearch: vi.fn(),
+          webSearch: vi.fn(),
+          models: vi.fn()
+        },
+        sessionStore: {
+          get: vi.fn(),
+          list: vi.fn(),
+          set: vi.fn(),
+          delete: vi.fn()
+        },
+        startMcpServer: vi.fn(),
+        writeStdout: (value) => stdout.push(value),
+        writeStdoutRaw: (value) => stdout.push(value),
+        writeStderr: vi.fn()
+      });
+
+      await cli.parseAsync([
+        "node",
+        "grok-agent-kit",
+        "doctor"
+      ]);
+    } finally {
+      vi.unstubAllEnvs();
+    }
+
+    expect(stdout[0]).toContain("PASS");
+    expect(stdout[0]).toContain("XAI_API_KEY");
+  });
+
   it("dispatches the x-search command to the service", async () => {
     const service = {
       chat: vi.fn(),
