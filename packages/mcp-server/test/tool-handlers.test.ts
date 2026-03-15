@@ -87,4 +87,28 @@ describe("createToolHandlers", () => {
       }
     ]);
   });
+
+  it("wraps service failures in MCP error output", async () => {
+    const service = {
+      chat: vi.fn().mockRejectedValue(new Error("missing API key")),
+      xSearch: vi.fn(),
+      webSearch: vi.fn(),
+      models: vi.fn()
+    };
+
+    const handlers = createToolHandlers(service);
+    const result = await handlers.grok_chat({
+      prompt: "Fail"
+    });
+
+    expect(result.isError).toBe(true);
+    expect(result.content[0]?.text).toContain("missing API key");
+    expect(result.structuredContent).toEqual(
+      expect.objectContaining({
+        error: expect.objectContaining({
+          message: "missing API key"
+        })
+      })
+    );
+  });
 });

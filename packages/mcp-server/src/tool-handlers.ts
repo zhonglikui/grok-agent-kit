@@ -33,84 +33,86 @@ export function createToolHandlers(service: {
 }) {
   return {
     async grok_chat(input: ChatOptions) {
-      const result = await service.chat(input);
-      const structuredContent: Record<string, unknown> = {
-        text: result.text,
-        citations: result.citations,
-        ...(result.responseId ? { responseId: result.responseId } : {}),
-        ...(result.model ? { model: result.model } : {}),
-        ...(result.raw !== undefined ? { raw: result.raw } : {})
-      };
-
-      return {
-        content: [
-          {
-            type: "text" as const,
-            text: renderTextResult(result)
-          }
-        ],
-        structuredContent
-      };
+      return runTextTool(() => service.chat(input));
     },
 
     async grok_x_search(input: XSearchOptions) {
-      const result = await service.xSearch(input);
-      const structuredContent: Record<string, unknown> = {
-        text: result.text,
-        citations: result.citations,
-        ...(result.responseId ? { responseId: result.responseId } : {}),
-        ...(result.model ? { model: result.model } : {}),
-        ...(result.raw !== undefined ? { raw: result.raw } : {})
-      };
-
-      return {
-        content: [
-          {
-            type: "text" as const,
-            text: renderTextResult(result)
-          }
-        ],
-        structuredContent
-      };
+      return runTextTool(() => service.xSearch(input));
     },
 
     async grok_web_search(input: WebSearchOptions) {
-      const result = await service.webSearch(input);
-      const structuredContent: Record<string, unknown> = {
-        text: result.text,
-        citations: result.citations,
-        ...(result.responseId ? { responseId: result.responseId } : {}),
-        ...(result.model ? { model: result.model } : {}),
-        ...(result.raw !== undefined ? { raw: result.raw } : {})
-      };
-
-      return {
-        content: [
-          {
-            type: "text" as const,
-            text: renderTextResult(result)
-          }
-        ],
-        structuredContent
-      };
+      return runTextTool(() => service.webSearch(input));
     },
 
     async grok_models(_input: Record<string, unknown>) {
-      const result = await service.models(true);
-      const structuredContent: Record<string, unknown> = {
-        models: result.models,
-        ...(result.raw !== undefined ? { raw: result.raw } : {})
-      };
+      try {
+        const result = await service.models(true);
+        const structuredContent: Record<string, unknown> = {
+          models: result.models,
+          ...(result.raw !== undefined ? { raw: result.raw } : {})
+        };
 
-      return {
-        content: [
-          {
-            type: "text" as const,
-            text: renderModelsResult(result)
-          }
-        ],
-        structuredContent
-      };
+        return {
+          content: [
+            {
+              type: "text" as const,
+              text: renderModelsResult(result)
+            }
+          ],
+          structuredContent
+        };
+      } catch (error) {
+        return createErrorResult(error);
+      }
+    }
+  };
+}
+
+async function runTextTool(
+  loader: () => Promise<GrokTextResult>
+) {
+  try {
+    const result = await loader();
+    const structuredContent: Record<string, unknown> = {
+      text: result.text,
+      citations: result.citations,
+      ...(result.responseId ? { responseId: result.responseId } : {}),
+      ...(result.model ? { model: result.model } : {}),
+      ...(result.raw !== undefined ? { raw: result.raw } : {})
+    };
+
+    return {
+      content: [
+        {
+          type: "text" as const,
+          text: renderTextResult(result)
+        }
+      ],
+      structuredContent
+    };
+  } catch (error) {
+    return createErrorResult(error);
+  }
+}
+
+function createErrorResult(error: unknown) {
+  const message =
+    error instanceof Error ? error.message : "Unknown MCP tool error";
+  const name = error instanceof Error ? error.name : "Error";
+
+  return {
+    isError: true as const,
+    content: [
+      {
+        type: "text" as const,
+        text: `Error: ${message}`
+      }
+    ],
+    structuredContent: {
+      error: {
+        name,
+        message
+      }
     }
   };
 }
