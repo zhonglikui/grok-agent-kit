@@ -45,6 +45,7 @@ export async function startStdioMcpServer(options?: {
         model: z.string().optional(),
         previousResponseId: z.string().optional(),
         store: z.boolean().optional(),
+        stream: z.boolean().optional(),
         allowedXHandles: z.array(z.string()).optional(),
         excludedXHandles: z.array(z.string()).optional(),
         includeRaw: z.boolean().optional(),
@@ -52,7 +53,7 @@ export async function startStdioMcpServer(options?: {
         responseOverrides: z.record(z.string(), z.unknown()).optional()
       }
     },
-    async (args) => handlers.grok_x_search(args)
+    async (args, extra) => handlers.grok_x_search(args, extra)
   );
 
   server.registerTool(
@@ -65,6 +66,7 @@ export async function startStdioMcpServer(options?: {
         model: z.string().optional(),
         previousResponseId: z.string().optional(),
         store: z.boolean().optional(),
+        stream: z.boolean().optional(),
         allowedWebDomains: z.array(z.string()).optional(),
         excludedWebDomains: z.array(z.string()).optional(),
         includeRaw: z.boolean().optional(),
@@ -72,7 +74,7 @@ export async function startStdioMcpServer(options?: {
         responseOverrides: z.record(z.string(), z.unknown()).optional()
       }
     },
-    async (args) => handlers.grok_web_search(args)
+    async (args, extra) => handlers.grok_web_search(args, extra)
   );
 
   server.registerTool(

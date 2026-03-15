@@ -61,6 +61,65 @@ describe("createToolHandlers", () => {
     expect(result.structuredContent.citations).toHaveLength(1);
   });
 
+  it("emits progress notifications for streamed X Search requests", async () => {
+    const sendNotification = vi.fn().mockResolvedValue(undefined);
+    const service = {
+      chat: vi.fn(),
+      xSearch: vi.fn().mockImplementation(async (input) => {
+        await input.onTextDelta?.("First");
+        await input.onTextDelta?.(" result");
+
+        return {
+          text: "First result",
+          citations: [],
+          responseId: "resp_x_stream"
+        };
+      }),
+      webSearch: vi.fn(),
+      models: vi.fn()
+    };
+
+    const handlers = createToolHandlers(service);
+    const result = await handlers.grok_x_search(
+      {
+        prompt: "Find launch posts",
+        previousResponseId: "resp_prev",
+        stream: true
+      } as never,
+      {
+        _meta: {
+          progressToken: "progress-x"
+        },
+        sendNotification
+      } as never
+    );
+
+    expect(service.xSearch).toHaveBeenCalledWith(
+      expect.objectContaining({
+        prompt: "Find launch posts",
+        previousResponseId: "resp_prev",
+        onTextDelta: expect.any(Function)
+      })
+    );
+    expect(sendNotification).toHaveBeenNthCalledWith(1, {
+      method: "notifications/progress",
+      params: {
+        progressToken: "progress-x",
+        progress: 1,
+        message: "First"
+      }
+    });
+    expect(sendNotification).toHaveBeenNthCalledWith(2, {
+      method: "notifications/progress",
+      params: {
+        progressToken: "progress-x",
+        progress: 2,
+        message: " result"
+      }
+    });
+    expect(result.structuredContent.text).toBe("First result");
+  });
+
   it("emits progress notifications for streamed chat requests", async () => {
     const sendNotification = vi.fn().mockResolvedValue(undefined);
     const service = {
@@ -116,6 +175,65 @@ describe("createToolHandlers", () => {
       }
     });
     expect(result.structuredContent.text).toBe("Hello world");
+  });
+
+  it("emits progress notifications for streamed Web Search requests", async () => {
+    const sendNotification = vi.fn().mockResolvedValue(undefined);
+    const service = {
+      chat: vi.fn(),
+      xSearch: vi.fn(),
+      webSearch: vi.fn().mockImplementation(async (input) => {
+        await input.onTextDelta?.("Web");
+        await input.onTextDelta?.(" result");
+
+        return {
+          text: "Web result",
+          citations: [],
+          responseId: "resp_web_stream"
+        };
+      }),
+      models: vi.fn()
+    };
+
+    const handlers = createToolHandlers(service);
+    const result = await handlers.grok_web_search(
+      {
+        prompt: "Find docs",
+        allowedWebDomains: ["example.com"],
+        stream: true
+      } as never,
+      {
+        _meta: {
+          progressToken: "progress-web"
+        },
+        sendNotification
+      } as never
+    );
+
+    expect(service.webSearch).toHaveBeenCalledWith(
+      expect.objectContaining({
+        prompt: "Find docs",
+        allowedWebDomains: ["example.com"],
+        onTextDelta: expect.any(Function)
+      })
+    );
+    expect(sendNotification).toHaveBeenNthCalledWith(1, {
+      method: "notifications/progress",
+      params: {
+        progressToken: "progress-web",
+        progress: 1,
+        message: "Web"
+      }
+    });
+    expect(sendNotification).toHaveBeenNthCalledWith(2, {
+      method: "notifications/progress",
+      params: {
+        progressToken: "progress-web",
+        progress: 2,
+        message: " result"
+      }
+    });
+    expect(result.structuredContent.text).toBe("Web result");
   });
 
   it("returns structured model output", async () => {

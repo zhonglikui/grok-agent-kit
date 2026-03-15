@@ -16,6 +16,14 @@ type McpChatInput = ChatOptions & {
   stream?: boolean;
 };
 
+type McpXSearchInput = XSearchOptions & {
+  stream?: boolean;
+};
+
+type McpWebSearchInput = WebSearchOptions & {
+  stream?: boolean;
+};
+
 type ToolHandlerExtra = Pick<
   RequestHandlerExtra<ServerRequest, ServerNotification>,
   "_meta" | "sendNotification"
@@ -48,40 +56,21 @@ export function createToolHandlers(service: {
 }) {
   return {
     async grok_chat(input: McpChatInput, extra?: ToolHandlerExtra) {
-      const { stream, ...serviceInput } = input;
-      const progressToken = extra?._meta?.progressToken;
-      const sendNotification = extra?.sendNotification;
-
-      if (!stream || progressToken === undefined || sendNotification === undefined) {
-        return runTextTool(() => service.chat(serviceInput));
-      }
-
-      let progress = 0;
-
-      return runTextTool(() =>
-        service.chat({
-          ...serviceInput,
-          onTextDelta: async (chunk) => {
-            progress += 1;
-            await sendNotification({
-              method: "notifications/progress",
-              params: {
-                progressToken,
-                progress,
-                message: chunk
-              }
-            } satisfies ProgressNotification);
-          }
-        })
+      return runStreamableTextTool(input, extra, (serviceInput) =>
+        service.chat(serviceInput)
       );
     },
 
-    async grok_x_search(input: XSearchOptions) {
-      return runTextTool(() => service.xSearch(input));
+    async grok_x_search(input: McpXSearchInput, extra?: ToolHandlerExtra) {
+      return runStreamableTextTool(input, extra, (serviceInput) =>
+        service.xSearch(serviceInput)
+      );
     },
 
-    async grok_web_search(input: WebSearchOptions) {
-      return runTextTool(() => service.webSearch(input));
+    async grok_web_search(input: McpWebSearchInput, extra?: ToolHandlerExtra) {
+      return runStreamableTextTool(input, extra, (serviceInput) =>
+        service.webSearch(serviceInput)
+      );
     },
 
     async grok_models(_input: Record<string, unknown>) {
@@ -105,6 +94,48 @@ export function createToolHandlers(service: {
         return createErrorResult(error);
       }
     }
+  };
+}
+
+async function runStreamableTextTool<TInput extends ChatOptions | XSearchOptions | WebSearchOptions>(
+  input: TInput & { stream?: boolean },
+  extra: ToolHandlerExtra | undefined,
+  loader: (input: TInput) => Promise<GrokTextResult>
+) {
+  const { stream, ...serviceInput } = input;
+  const onTextDelta = createProgressNotifier(stream, extra);
+
+  return runTextTool(() =>
+    loader({
+      ...(serviceInput as TInput),
+      ...(onTextDelta ? { onTextDelta } : {})
+    })
+  );
+}
+
+function createProgressNotifier(
+  stream: boolean | undefined,
+  extra: ToolHandlerExtra | undefined
+) {
+  const progressToken = extra?._meta?.progressToken;
+  const sendNotification = extra?.sendNotification;
+
+  if (!stream || progressToken === undefined || sendNotification === undefined) {
+    return undefined;
+  }
+
+  let progress = 0;
+
+  return async (chunk: string) => {
+    progress += 1;
+    await sendNotification({
+      method: "notifications/progress",
+      params: {
+        progressToken,
+        progress,
+        message: chunk
+      }
+    } satisfies ProgressNotification);
   };
 }
 

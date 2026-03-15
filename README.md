@@ -102,7 +102,7 @@ node apps/cli/dist/bin.js mcp
 - Use `sessions show <name>` to print the saved local transcript for that named session.
 - Use `sessions list` and `sessions delete <name>` to manage local session metadata.
 - MCP clients can pass `previousResponseId` and `store` to `grok_chat`, `grok_x_search`, and `grok_web_search` when they want explicit continuity.
-- MCP clients can pass `stream: true` to `grok_chat` and request MCP progress notifications to receive text deltas in `notifications/progress.params.message`.
+- MCP clients can pass `stream: true` to `grok_chat`, `grok_x_search`, and `grok_web_search`, then request MCP progress notifications to receive text deltas in `notifications/progress.params.message`.
 
 ## Diagnostics
 

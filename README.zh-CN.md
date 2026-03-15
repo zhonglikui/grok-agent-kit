@@ -101,7 +101,7 @@ node apps/cli/dist/bin.js mcp
 - 用 `sessions show <name>` 打印该命名会话的本地转录记录。
 - 用 `sessions list` 和 `sessions delete <name>` 管理本地会话元数据。
 - MCP 客户端可在 `grok_chat`、`grok_x_search`、`grok_web_search` 中传入 `previousResponseId` 和 `store` 来显式续接上下文。
-- MCP 客户端可对 `grok_chat` 传入 `stream: true`，并请求 MCP progress 通知，以便从 `notifications/progress.params.message` 接收文本增量。
+- MCP 客户端可对 `grok_chat`、`grok_x_search`、`grok_web_search` 传入 `stream: true`，并请求 MCP progress 通知，以便从 `notifications/progress.params.message` 接收文本增量。
 
 ## 诊断
 
