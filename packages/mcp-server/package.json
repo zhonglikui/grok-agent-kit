@@ -1,0 +1,17 @@
+{
+  "name": "@grok-agent-kit/mcp-server",
+  "version": "0.1.0",
+  "type": "module",
+  "exports": {
+    ".": "./dist/index.js"
+  },
+  "scripts": {
+    "build": "tsc -b",
+    "test": "vitest run"
+  },
+  "dependencies": {
+    "@grok-agent-kit/core": "file:../core",
+    "@modelcontextprotocol/sdk": "^1.18.2",
+    "zod": "^4.1.11"
+  }
+}

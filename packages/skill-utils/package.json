@@ -1,0 +1,12 @@
+{
+  "name": "@grok-agent-kit/skill-utils",
+  "version": "0.1.0",
+  "type": "module",
+  "exports": {
+    ".": "./dist/index.js"
+  },
+  "scripts": {
+    "build": "tsc -b",
+    "test": "vitest run"
+  }
+}

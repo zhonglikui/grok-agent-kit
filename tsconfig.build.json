@@ -1,0 +1,17 @@
+{
+  "files": [],
+  "references": [
+    {
+      "path": "./packages/xai-client"
+    },
+    {
+      "path": "./packages/core"
+    },
+    {
+      "path": "./packages/mcp-server"
+    },
+    {
+      "path": "./apps/cli"
+    }
+  ]
+}

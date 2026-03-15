@@ -1,0 +1,34 @@
+{
+  "compilerOptions": {
+    "baseUrl": ".",
+    "target": "ES2022",
+    "module": "NodeNext",
+    "moduleResolution": "NodeNext",
+    "lib": [
+      "ES2023"
+    ],
+    "strict": true,
+    "declaration": true,
+    "declarationMap": true,
+    "sourceMap": true,
+    "esModuleInterop": true,
+    "skipLibCheck": true,
+    "resolveJsonModule": true,
+    "verbatimModuleSyntax": true,
+    "paths": {
+      "@grok-agent-kit/core": [
+        "packages/core/src/index.ts"
+      ],
+      "@grok-agent-kit/mcp-server": [
+        "packages/mcp-server/src/index.ts"
+      ],
+      "@grok-agent-kit/xai-client": [
+        "packages/xai-client/src/index.ts"
+      ]
+    },
+    "types": [
+      "node",
+      "vitest/globals"
+    ]
+  }
+}

@@ -1,0 +1,21 @@
+{
+  "name": "grok-agent-kit",
+  "version": "0.1.0",
+  "description": "CLI + MCP + skills for xAI Grok",
+  "type": "module",
+  "bin": {
+    "grok-agent-kit": "./dist/bin.js"
+  },
+  "exports": {
+    ".": "./dist/index.js"
+  },
+  "scripts": {
+    "build": "tsc -b",
+    "test": "vitest run"
+  },
+  "dependencies": {
+    "@grok-agent-kit/core": "file:../../packages/core",
+    "@grok-agent-kit/mcp-server": "file:../../packages/mcp-server",
+    "commander": "^14.0.1"
+  }
+}

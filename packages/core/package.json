@@ -1,0 +1,16 @@
+{
+  "name": "@grok-agent-kit/core",
+  "version": "0.1.0",
+  "type": "module",
+  "exports": {
+    ".": "./dist/index.js"
+  },
+  "scripts": {
+    "build": "tsc -b",
+    "test": "vitest run"
+  },
+  "dependencies": {
+    "@grok-agent-kit/xai-client": "file:../xai-client",
+    "zod": "^4.1.11"
+  }
+}
