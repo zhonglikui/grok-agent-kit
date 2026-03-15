@@ -8,16 +8,67 @@ export function createWebSearchCommand(dependencies: CliDependencies): Command {
     .description("Answer a prompt using xAI Web Search")
     .requiredOption("--prompt <prompt>", "Prompt text")
     .option("--model <model>", "Override model")
+    .option("--session <name>", "Continue or create a named local session")
+    .option("--reset-session", "Reset the named session before sending the prompt")
+    .option(
+      "--previous-response-id <id>",
+      "Continue from a previous xAI response id"
+    )
+    .option("--no-store", "Do not store the response on xAI")
     .option("--allow-domain <domains...>", "Allow only these domains")
     .option("--exclude-domain <domains...>", "Exclude these domains")
     .option("--json", "Print JSON output")
     .action(async (options) => {
+      if (options.session && options.store === false) {
+        throw new Error("--session cannot be used with --no-store");
+      }
+
+      if (options.resetSession && !options.session) {
+        throw new Error("--reset-session requires --session");
+      }
+
+      if (options.resetSession && options.session) {
+        await dependencies.sessionStore.delete(options.session);
+      }
+
+      let existingSession = undefined;
+      let previousResponseId = options.previousResponseId as string | undefined;
+
+      if (!previousResponseId && options.session) {
+        existingSession = await dependencies.sessionStore.get(options.session);
+        previousResponseId = existingSession?.responseId;
+      } else if (options.session) {
+        existingSession = await dependencies.sessionStore.get(options.session);
+      }
+
       const result = await dependencies.service.webSearch({
         prompt: options.prompt,
         model: options.model,
+        previousResponseId,
+        store: options.session ? true : options.store,
         allowedWebDomains: options.allowDomain,
         excludedWebDomains: options.excludeDomain
       });
+
+      const nextResponseId = result.responseId ?? existingSession?.responseId;
+
+      if (options.session && nextResponseId) {
+        const timestamp = new Date().toISOString();
+
+        await dependencies.sessionStore.set(options.session, {
+          responseId: nextResponseId,
+          updatedAt: timestamp,
+          history: [
+            ...(existingSession?.history ?? []),
+            {
+              prompt: options.prompt,
+              responseText: result.text,
+              responseId: result.responseId,
+              createdAt: timestamp
+            }
+          ]
+        });
+      }
 
       renderTextResult(result, Boolean(options.json), dependencies.writeStdout);
     });

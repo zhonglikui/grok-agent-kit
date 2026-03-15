@@ -57,6 +57,8 @@ npx -y grok-agent-kit chat --prompt "Stream a quick summary" --stream
 npx -y grok-agent-kit chat --session research --prompt "Summarize the latest Grok updates"
 npx -y grok-agent-kit chat --session research --prompt "Turn that into a release note draft"
 npx -y grok-agent-kit sessions show research
+npx -y grok-agent-kit x-search --session research --prompt "Latest xAI posts"
+npx -y grok-agent-kit web-search --session research --prompt "Latest xAI docs"
 npx -y grok-agent-kit x-search --prompt "Latest xAI posts"
 npx -y grok-agent-kit web-search --prompt "Latest xAI docs"
 npx -y grok-agent-kit sessions list
@@ -74,6 +76,8 @@ node apps/cli/dist/bin.js chat --prompt "Summarize Grok search"
 node apps/cli/dist/bin.js chat --prompt "Stream a local reply" --stream
 node apps/cli/dist/bin.js chat --session demo --prompt "Start a local-first conversation"
 node apps/cli/dist/bin.js sessions show demo
+node apps/cli/dist/bin.js x-search --session demo --prompt "Find recent xAI posts"
+node apps/cli/dist/bin.js web-search --session demo --prompt "Find updated xAI docs"
 node apps/cli/dist/bin.js sessions list
 node apps/cli/dist/bin.js mcp
 ```
@@ -85,6 +89,7 @@ node apps/cli/dist/bin.js mcp
 - 用 `chat --session <name>` 在多次调用之间继续同一个本地命名会话。
 - 用 `chat --reset-session --session <name>` 重置并重新开始该命名会话。
 - 用 `chat --stream` 在 xAI 逐步返回内容时直接输出文本增量。
+- 用 `x-search --session <name>` 和 `web-search --session <name>` 在同一个命名会话里继续搜索工作流。
 - 用 `sessions show <name>` 打印该命名会话的本地转录记录。
 - 用 `sessions list` 和 `sessions delete <name>` 管理本地会话元数据。
 - MCP 客户端可在 `grok_chat`、`grok_x_search`、`grok_web_search` 中传入 `previousResponseId` 和 `store` 来显式续接上下文。

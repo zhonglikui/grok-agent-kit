@@ -12,6 +12,8 @@ npx -y grok-agent-kit chat --prompt "Stream a quick summary" --stream
 npx -y grok-agent-kit chat --session notes --prompt "Start a persistent CLI session"
 npx -y grok-agent-kit chat --session notes --prompt "Continue that session"
 npx -y grok-agent-kit sessions show notes
+npx -y grok-agent-kit x-search --session notes --prompt "Latest xAI posts"
+npx -y grok-agent-kit web-search --session notes --prompt "Latest xAI docs"
 npx -y grok-agent-kit sessions list
 npx -y grok-agent-kit x-search --prompt "Latest xAI posts"
 npx -y grok-agent-kit web-search --prompt "Latest xAI docs"
@@ -37,6 +39,7 @@ The CLI retries transient rate-limit, timeout, and `5xx` failures by default so 
 - `chat --session <name>` continues a named local session
 - `chat --reset-session --session <name>` resets that session before sending the new prompt
 - `chat --stream` writes response text incrementally as it arrives
+- `x-search --session <name>` and `web-search --session <name>` reuse the same local session continuity
 - `chat --previous-response-id <id>` continues from a raw xAI response id
 - `sessions show <name>` prints the saved local transcript for a session
 - `sessions list` shows saved sessions

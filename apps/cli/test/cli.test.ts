@@ -88,6 +88,70 @@ describe("CLI", () => {
     expect(stdout[0]).toContain("x output");
   });
 
+  it("continues a named x-search session and stores the new response id", async () => {
+    const service = {
+      chat: vi.fn(),
+      xSearch: vi.fn().mockResolvedValue({
+        text: "x search output",
+        citations: [],
+        responseId: "resp_x_next"
+      }),
+      webSearch: vi.fn(),
+      models: vi.fn()
+    };
+    const sessionStore = {
+      get: vi.fn().mockResolvedValue({
+        name: "research",
+        responseId: "resp_x_prev",
+        updatedAt: "2026-03-16T00:00:00.000Z",
+        history: []
+      }),
+      list: vi.fn(),
+      set: vi.fn().mockResolvedValue(undefined),
+      delete: vi.fn()
+    };
+
+    const cli = buildCli({
+      service,
+      sessionStore,
+      startMcpServer: vi.fn(),
+      writeStdout: vi.fn(),
+      writeStdoutRaw: vi.fn(),
+      writeStderr: vi.fn()
+    });
+
+    await cli.parseAsync([
+      "node",
+      "grok-agent-kit",
+      "x-search",
+      "--prompt",
+      "Search X session",
+      "--session",
+      "research"
+    ]);
+
+    expect(service.xSearch).toHaveBeenCalledWith(
+      expect.objectContaining({
+        prompt: "Search X session",
+        previousResponseId: "resp_x_prev",
+        store: true
+      })
+    );
+    expect(sessionStore.set).toHaveBeenCalledWith(
+      "research",
+      expect.objectContaining({
+        responseId: "resp_x_next",
+        history: expect.arrayContaining([
+          expect.objectContaining({
+            prompt: "Search X session",
+            responseText: "x search output",
+            responseId: "resp_x_next"
+          })
+        ])
+      })
+    );
+  });
+
   it("starts the MCP server for the mcp command", async () => {
     const startMcpServer = vi.fn().mockResolvedValue(undefined);
 
@@ -151,6 +215,70 @@ describe("CLI", () => {
 
     expect(serviceTrap).not.toHaveBeenCalled();
     expect(startMcpServer).not.toHaveBeenCalled();
+  });
+
+  it("continues a named web-search session and stores the new response id", async () => {
+    const service = {
+      chat: vi.fn(),
+      xSearch: vi.fn(),
+      webSearch: vi.fn().mockResolvedValue({
+        text: "web search output",
+        citations: [],
+        responseId: "resp_web_next"
+      }),
+      models: vi.fn()
+    };
+    const sessionStore = {
+      get: vi.fn().mockResolvedValue({
+        name: "docs",
+        responseId: "resp_web_prev",
+        updatedAt: "2026-03-16T00:00:00.000Z",
+        history: []
+      }),
+      list: vi.fn(),
+      set: vi.fn().mockResolvedValue(undefined),
+      delete: vi.fn()
+    };
+
+    const cli = buildCli({
+      service,
+      sessionStore,
+      startMcpServer: vi.fn(),
+      writeStdout: vi.fn(),
+      writeStdoutRaw: vi.fn(),
+      writeStderr: vi.fn()
+    });
+
+    await cli.parseAsync([
+      "node",
+      "grok-agent-kit",
+      "web-search",
+      "--prompt",
+      "Search docs session",
+      "--session",
+      "docs"
+    ]);
+
+    expect(service.webSearch).toHaveBeenCalledWith(
+      expect.objectContaining({
+        prompt: "Search docs session",
+        previousResponseId: "resp_web_prev",
+        store: true
+      })
+    );
+    expect(sessionStore.set).toHaveBeenCalledWith(
+      "docs",
+      expect.objectContaining({
+        responseId: "resp_web_next",
+        history: expect.arrayContaining([
+          expect.objectContaining({
+            prompt: "Search docs session",
+            responseText: "web search output",
+            responseId: "resp_web_next"
+          })
+        ])
+      })
+    );
   });
 
   it("continues a named chat session and stores the new response id", async () => {
