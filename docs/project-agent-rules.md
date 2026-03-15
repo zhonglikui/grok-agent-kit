@@ -16,15 +16,18 @@ These files intentionally repeat the same core rules so the active tool can pick
 
 1. Before choosing the next milestone or making a major architecture change, consult the local `gemini` CLI.
 2. Once the task is clear, execute autonomously without asking for approval on each small step.
-3. After each independently useful feature slice, run:
+3. After Codex and Gemini reach a conclusion for a slice, Codex should execute every remaining step in that slice automatically: implementation, documentation, verification, commit, push, and obvious same-slice follow-up work.
+4. This autonomy rule applies to both already-known work and newly discovered work inside the same slice.
+5. If a Gemini consultation fails, times out, or is interrupted, retry or continue from the latest valid Gemini recommendation. Do not stop only because the consultation tool had an issue.
+6. After each independently useful feature slice, run:
    - `npm test`
    - `npm run build`
    - `npm run typecheck`
    - `npm run pack:cli`
-4. If verification passes, commit and push the result to `origin/main`.
-5. Keep the project local-first and avoid requiring a self-hosted server for the default product path.
-6. Keep `XAI_API_KEY` as the primary auth path; only consider browser auth when it does not require a self-hosted backend.
-7. Update English and Simplified Chinese user-facing docs together.
+7. If verification passes, commit and push the result to `origin/main`.
+8. Keep the project local-first and avoid requiring a self-hosted server for the default product path.
+9. Keep `XAI_API_KEY` as the primary auth path; only consider browser auth when it does not require a self-hosted backend.
+10. Update English and Simplified Chinese user-facing docs together.
 
 ## Maintenance note
 
