@@ -1,12 +1,14 @@
 # grok-agent-kit
 
+[English](./README.md) | [简体中文](./README.zh-CN.md)
+
 Community-built, unofficial CLI + MCP + skills toolkit for xAI Grok.
 
 `grok-agent-kit` packages the same Grok-powered capability surface for three audiences:
 
 - humans using a local CLI
 - coding agents using MCP
-- teams sharing search guidance through skills and client docs
+- teams sharing search guidance through reusable skills
 
 ## What it ships
 
@@ -41,34 +43,48 @@ GROK_AGENT_KIT_TIMEOUT_MS=30000
 
 `XAI_BASE_URL` is optional and defaults to the official xAI inference base URL.
 
-## Local development
+## Quick start
+
+Run directly from npm after publication:
+
+```bash
+npx -y grok-agent-kit chat --prompt "Hello from Grok"
+npx -y grok-agent-kit x-search --prompt "Latest xAI posts"
+npx -y grok-agent-kit web-search --prompt "Latest xAI docs"
+npx -y grok-agent-kit models
+npx -y grok-agent-kit mcp
+```
+
+For local development:
 
 ```bash
 npm install
-npm run test
+npm test
 npm run build
-```
-
-Then run the built CLI:
-
-```bash
 node apps/cli/dist/bin.js chat --prompt "Summarize Grok search"
-node apps/cli/dist/bin.js x-search --prompt "Latest xAI posts"
-node apps/cli/dist/bin.js web-search --prompt "Latest xAI docs"
-node apps/cli/dist/bin.js models
 node apps/cli/dist/bin.js mcp
 ```
 
-## Planned published usage
+## Client setup docs
 
-After publishing to npm, the intended install path is:
+- [Client docs index](./docs/clients/README.md)
+- [Codex](./docs/clients/codex.md)
+- [Claude Code](./docs/clients/claude-code.md)
+- [OpenClaw](./docs/clients/openclaw.md)
 
-```bash
-npx grok-agent-kit chat --prompt "Hello"
-npx grok-agent-kit x-search --prompt "Latest xAI posts"
-npx grok-agent-kit web-search --prompt "Latest xAI docs"
-npx grok-agent-kit mcp
-```
+Simplified Chinese:
+
+- [客户端文档索引](./docs/clients/README.zh-CN.md)
+- [Codex（中文）](./docs/clients/codex.zh-CN.md)
+- [Claude Code（中文）](./docs/clients/claude-code.zh-CN.md)
+- [OpenClaw（中文）](./docs/clients/openclaw.zh-CN.md)
+
+## Community and release
+
+- Read [CONTRIBUTING.md](./CONTRIBUTING.md) before opening a PR
+- Report vulnerabilities through [SECURITY.md](./SECURITY.md)
+- Review behavior expectations in [CODE_OF_CONDUCT.md](./CODE_OF_CONDUCT.md)
+- Publish from GitHub Actions with `.github/workflows/publish.yml` after setting the `NPM_TOKEN` repository secret
 
 ## Repository layout
 
@@ -82,12 +98,6 @@ skills/                Shared and client-specific skill content
 examples/clients       Ready-to-adapt config examples
 docs/clients           Client installation notes
 ```
-
-## Client docs
-
-- `D:/work/typescript/grok-agent-kit/docs/clients/codex.md`
-- `D:/work/typescript/grok-agent-kit/docs/clients/claude-code.md`
-- `D:/work/typescript/grok-agent-kit/docs/clients/openclaw.md`
 
 ## Official references used
 
@@ -104,4 +114,6 @@ This repository already contains:
 
 - a working TypeScript monorepo layout
 - tested xAI REST client, core service, CLI dispatch, and MCP handlers
-- client docs and skill assets for the first release structure
+- a publishable CLI packaging path for npm
+- bilingual setup docs for supported clients
+- community health files and release workflow scaffolding

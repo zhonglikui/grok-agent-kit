@@ -2,20 +2,48 @@
   "name": "grok-agent-kit",
   "version": "0.1.0",
   "description": "CLI + MCP + skills for xAI Grok",
+  "license": "MIT",
   "type": "module",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/zhonglikui/grok-agent-kit.git",
+    "directory": "apps/cli"
+  },
+  "homepage": "https://github.com/zhonglikui/grok-agent-kit#readme",
+  "bugs": {
+    "url": "https://github.com/zhonglikui/grok-agent-kit/issues"
+  },
+  "keywords": [
+    "xai",
+    "grok",
+    "mcp",
+    "cli",
+    "search",
+    "codex",
+    "claude-code"
+  ],
+  "engines": {
+    "node": ">=20"
+  },
+  "files": [
+    "dist",
+    "README.md"
+  ],
   "bin": {
     "grok-agent-kit": "./dist/bin.js"
   },
-  "exports": {
-    ".": "./dist/index.js"
+  "publishConfig": {
+    "access": "public"
   },
   "scripts": {
-    "build": "tsc -b",
-    "test": "vitest run"
+    "build": "node -e \"require('node:fs').rmSync('dist', { recursive: true, force: true })\" && tsup --config tsup.config.ts",
+    "prepack": "npm run build",
+    "test": "vitest run",
+    "typecheck": "tsc --noEmit -p tsconfig.json --pretty false"
   },
   "dependencies": {
-    "@grok-agent-kit/core": "file:../../packages/core",
-    "@grok-agent-kit/mcp-server": "file:../../packages/mcp-server",
-    "commander": "^14.0.1"
+    "@modelcontextprotocol/sdk": "^1.18.2",
+    "commander": "^14.0.1",
+    "zod": "^4.1.11"
   }
 }

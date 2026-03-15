@@ -1,0 +1,68 @@
+name: Bug report
+description: Report a reproducible problem with the CLI, MCP server, docs, or packaged examples.
+title: "[Bug]: "
+labels:
+  - bug
+body:
+  - type: markdown
+    attributes:
+      value: |
+        Thanks for reporting an issue. Please include enough detail for someone else to reproduce it.
+  - type: dropdown
+    id: surface
+    attributes:
+      label: Affected surface
+      description: Where do you see the problem?
+      options:
+        - CLI
+        - MCP server
+        - Client docs
+        - Example config
+        - Packaging / npm
+        - Other
+    validations:
+      required: true
+  - type: input
+    id: version
+    attributes:
+      label: Version
+      description: Which `grok-agent-kit` version are you using?
+      placeholder: 0.1.0
+    validations:
+      required: true
+  - type: input
+    id: environment
+    attributes:
+      label: Environment
+      description: OS, Node.js version, and client name if relevant
+      placeholder: Windows 11, Node 24, Codex desktop
+    validations:
+      required: true
+  - type: textarea
+    id: command
+    attributes:
+      label: Command or config
+      description: Paste the command, MCP config, or JSON/TOML snippet that triggers the problem
+      render: shell
+    validations:
+      required: true
+  - type: textarea
+    id: expected
+    attributes:
+      label: Expected behavior
+    validations:
+      required: true
+  - type: textarea
+    id: actual
+    attributes:
+      label: Actual behavior
+    validations:
+      required: true
+  - type: textarea
+    id: logs
+    attributes:
+      label: Logs or screenshots
+      description: Include stack traces, stderr, or screenshots if available
+      render: shell
+    validations:
+      required: false

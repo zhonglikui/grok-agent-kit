@@ -7,13 +7,16 @@
     "packages/*"
   ],
   "scripts": {
-    "build": "tsc -b tsconfig.build.json",
+    "build:packages": "npm run build --workspace packages/xai-client && npm run build --workspace packages/core && npm run build --workspace packages/mcp-server",
+    "build": "npm run build:packages && npm run build --workspace apps/cli",
+    "pack:cli": "node -e \"const fs = require('node:fs'); fs.rmSync('.artifacts', { recursive: true, force: true }); fs.mkdirSync('.artifacts', { recursive: true });\" && npm pack --workspace apps/cli --json --pack-destination ./.artifacts",
     "test": "npx vitest run",
     "test:watch": "npx vitest",
-    "typecheck": "tsc -b tsconfig.build.json --pretty false"
+    "typecheck": "npm run typecheck --workspace packages/xai-client && npm run typecheck --workspace packages/core && npm run typecheck --workspace packages/mcp-server && npm run typecheck --workspace apps/cli"
   },
   "devDependencies": {
     "@types/node": "^24.6.0",
+    "tsup": "^8.5.0",
     "typescript": "^5.9.3",
     "vitest": "^3.2.4"
   }

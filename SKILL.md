@@ -9,6 +9,6 @@ This repository provides a local CLI, an MCP server, and portable search guidanc
 
 See:
 
-- `D:/work/typescript/grok-agent-kit/skills/shared/grok-search-guidance.md`
-- `D:/work/typescript/grok-agent-kit/skills/claude-code/SKILL.md`
-- `D:/work/typescript/grok-agent-kit/skills/openclaw/SKILL.md`
+- `skills/shared/grok-search-guidance.md`
+- `skills/claude-code/SKILL.md`
+- `skills/openclaw/SKILL.md`

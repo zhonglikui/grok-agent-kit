@@ -1,13 +1,15 @@
 {
   "name": "@grok-agent-kit/core",
   "version": "0.1.0",
+  "private": true,
   "type": "module",
   "exports": {
     ".": "./dist/index.js"
   },
   "scripts": {
     "build": "tsc -b",
-    "test": "vitest run"
+    "test": "vitest run",
+    "typecheck": "tsc --noEmit -p tsconfig.json --pretty false"
   },
   "dependencies": {
     "@grok-agent-kit/xai-client": "file:../xai-client",

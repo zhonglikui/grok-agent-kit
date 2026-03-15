@@ -1,4 +1,4 @@
 [mcp_servers.grok-agent-kit]
 command = "node"
-args = ["D:\\work\\typescript\\grok-agent-kit\\apps\\cli\\dist\\bin.js", "mcp"]
+args = ["/absolute/path/to/grok-agent-kit/apps/cli/dist/bin.js", "mcp"]
 env = { XAI_API_KEY = "YOUR_XAI_API_KEY" }

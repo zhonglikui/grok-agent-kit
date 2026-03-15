@@ -3,7 +3,7 @@
     "grok-agent-kit": {
       "command": "node",
       "args": [
-        "D:\\work\\typescript\\grok-agent-kit\\apps\\cli\\dist\\bin.js",
+        "/absolute/path/to/grok-agent-kit/apps/cli/dist/bin.js",
         "mcp"
       ],
       "env": {

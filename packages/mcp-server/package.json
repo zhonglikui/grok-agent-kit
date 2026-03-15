@@ -1,13 +1,15 @@
 {
   "name": "@grok-agent-kit/mcp-server",
   "version": "0.1.0",
+  "private": true,
   "type": "module",
   "exports": {
     ".": "./dist/index.js"
   },
   "scripts": {
     "build": "tsc -b",
-    "test": "vitest run"
+    "test": "vitest run",
+    "typecheck": "tsc --noEmit -p tsconfig.json --pretty false"
   },
   "dependencies": {
     "@grok-agent-kit/core": "file:../core",

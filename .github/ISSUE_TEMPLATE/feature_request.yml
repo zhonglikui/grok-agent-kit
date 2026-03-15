@@ -1,0 +1,51 @@
+name: Feature request
+description: Suggest a new CLI command, MCP tool improvement, docs enhancement, or packaging feature.
+title: "[Feature]: "
+labels:
+  - enhancement
+body:
+  - type: markdown
+    attributes:
+      value: |
+        Thanks for the suggestion. Focus on the user problem first, then describe the desired interface.
+  - type: dropdown
+    id: area
+    attributes:
+      label: Area
+      options:
+        - CLI
+        - MCP server
+        - Skills
+        - Client docs
+        - Release / packaging
+        - Other
+    validations:
+      required: true
+  - type: textarea
+    id: problem
+    attributes:
+      label: Problem statement
+      description: What workflow is hard today?
+    validations:
+      required: true
+  - type: textarea
+    id: proposal
+    attributes:
+      label: Proposed solution
+      description: What would you like `grok-agent-kit` to do?
+    validations:
+      required: true
+  - type: textarea
+    id: alternatives
+    attributes:
+      label: Alternatives considered
+      description: Optional, but helpful if you already tried another approach
+    validations:
+      required: false
+  - type: textarea
+    id: context
+    attributes:
+      label: Extra context
+      description: Link issues, client constraints, or xAI docs if relevant
+    validations:
+      required: false

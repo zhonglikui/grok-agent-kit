@@ -1,10 +1,10 @@
-# OpenClaw setup
+# OpenClaw 接入说明
 
 [English](./openclaw.md) | [简体中文](./openclaw.zh-CN.md)
 
-## Local development config
+## 本地开发配置
 
-Add an MCP server entry that launches the built CLI:
+在 OpenClaw 里添加一个 MCP server 配置，指向已经构建好的 CLI：
 
 ```json
 {
@@ -23,7 +23,7 @@ Add an MCP server entry that launches the built CLI:
 }
 ```
 
-## Published package config
+## 发布后的 npm 配置
 
 ```json
 {
@@ -39,10 +39,10 @@ Add an MCP server entry that launches the built CLI:
 }
 ```
 
-## Skill asset
+## Skill 文件
 
-Use `skills/openclaw/SKILL.md` for OpenClaw-oriented search guidance.
+`skills/openclaw/SKILL.md` 可作为面向 OpenClaw 的搜索指导文件。
 
-## Example config
+## 示例配置
 
-You can adapt `examples/clients/openclaw-config.json` directly.
+你可以直接参考 `examples/clients/openclaw-config.json`。
