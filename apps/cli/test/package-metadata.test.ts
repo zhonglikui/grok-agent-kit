@@ -38,7 +38,7 @@ describe("CLI package metadata", () => {
     expect(packageJson.name).toBe("grok-agent-kit");
     expect(packageJson.description).toContain("CLI + MCP + skills");
     expect(packageJson.license).toBeTruthy();
-    expect(packageJson.bin?.["grok-agent-kit"]).toBe("./dist/bin.js");
+    expect(packageJson.bin?.["grok-agent-kit"]).toBe("dist/bin.js");
     expect(packageJson.files).toContain("dist");
     expect(packageJson.repository?.type).toBe("git");
     expect(packageJson.repository?.url).toContain("github.com/zhonglikui/grok-agent-kit");

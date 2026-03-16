@@ -20,7 +20,10 @@ describe("release workflow guardrails", () => {
 
   it("uses GitHub OIDC trusted publishing instead of an npm token", () => {
     expect(publishWorkflow).toContain("id-token: write");
+    expect(publishWorkflow).toContain("working-directory: apps/cli");
+    expect(publishWorkflow).toContain("npm publish --access public --provenance");
     expect(publishWorkflow).not.toContain("NODE_AUTH_TOKEN");
     expect(publishWorkflow).not.toContain("NPM_TOKEN");
+    expect(publishWorkflow).not.toContain("npm publish --workspace apps/cli");
   });
 });

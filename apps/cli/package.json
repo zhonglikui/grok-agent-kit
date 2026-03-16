@@ -30,7 +30,7 @@
     "README.md"
   ],
   "bin": {
-    "grok-agent-kit": "./dist/bin.js"
+    "grok-agent-kit": "dist/bin.js"
   },
   "publishConfig": {
     "access": "public"
