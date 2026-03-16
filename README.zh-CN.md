@@ -144,9 +144,10 @@ node apps/cli/dist/bin.js mcp
 - `grok-agent-kit clients codex --mode local --project-path /absolute/path/to/grok-agent-kit`
 - `grok-agent-kit clients codex --mode published`
 - `grok-agent-kit clients claude-code --mode published`
+- `grok-agent-kit clients gemini-cli --mode published`
 - `grok-agent-kit clients openclaw --mode local --project-path /absolute/path/to/grok-agent-kit`
 
-`local` 模式会生成指向 `apps/cli/dist/bin.js` 的本地开发片段，`published` 模式则会生成适用于 npm 安装场景的 `npx -y grok-agent-kit mcp` 配置。
+`local` 模式会生成指向 `apps/cli/dist/bin.js` 的本地开发片段，`published` 模式则会生成适用于 npm 安装场景的 `npx -y grok-agent-kit mcp` 传输片段，或对应客户端的添加命令。
 
 ## 会话连续性
 
@@ -228,14 +229,26 @@ node apps/cli/dist/bin.js mcp
 - [客户端文档索引](./docs/clients/README.zh-CN.md)
 - [Codex](./docs/clients/codex.zh-CN.md)
 - [Claude Code](./docs/clients/claude-code.zh-CN.md)
+- [Gemini CLI](./docs/clients/gemini-cli.zh-CN.md)
 - [OpenClaw](./docs/clients/openclaw.zh-CN.md)
+- [MCP 命令式客户端](./docs/clients/mcp-command-clients.zh-CN.md)
+- [MCP JSON 配置客户端](./docs/clients/mcp-json-clients.zh-CN.md)
+- [MCP 图形界面与市场型客户端](./docs/clients/mcp-gui-clients.zh-CN.md)
+- [`SKILL.md` 技能客户端](./docs/clients/skills-skill-md-clients.zh-CN.md)
+- [命令式技能客户端](./docs/clients/skills-command-clients.zh-CN.md)
 
 英文版：
 
 - [Client docs index](./docs/clients/README.md)
 - [Codex](./docs/clients/codex.md)
 - [Claude Code](./docs/clients/claude-code.md)
+- [Gemini CLI](./docs/clients/gemini-cli.md)
 - [OpenClaw](./docs/clients/openclaw.md)
+- [MCP command-managed clients](./docs/clients/mcp-command-clients.md)
+- [MCP JSON-config clients](./docs/clients/mcp-json-clients.md)
+- [MCP GUI and marketplace clients](./docs/clients/mcp-gui-clients.md)
+- [Skill `SKILL.md` clients](./docs/clients/skills-skill-md-clients.md)
+- [Skill command-managed clients](./docs/clients/skills-command-clients.md)
 
 ## 社区与发布
 

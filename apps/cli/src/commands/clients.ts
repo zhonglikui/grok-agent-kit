@@ -13,9 +13,9 @@ const supportedModes = ["local", "published"] as const;
 export function createClientsCommand(dependencies: CliDependencies): Command {
   return new Command("clients")
     .description(
-      "Print ready-to-paste Codex, Claude Code, or OpenClaw setup snippets"
+      "Print ready-to-paste Codex, Claude Code, OpenClaw, or Gemini CLI setup snippets"
     )
-    .argument("<client>", "codex | claude-code | openclaw", parseClient)
+    .argument("<client>", "codex | claude-code | openclaw | gemini-cli", parseClient)
     .option(
       "--mode <mode>",
       "Snippet target: local or published package",

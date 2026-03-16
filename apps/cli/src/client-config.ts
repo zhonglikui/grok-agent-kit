@@ -3,7 +3,8 @@ import { resolve } from "node:path";
 export const supportedClients = [
   "codex",
   "claude-code",
-  "openclaw"
+  "openclaw",
+  "gemini-cli"
 ] as const;
 
 export type SupportedClient = (typeof supportedClients)[number];
@@ -25,6 +26,8 @@ export function renderClientConfig(input: RenderClientConfigInput): string {
       return renderClaudeCodeConfig(input);
     case "openclaw":
       return renderOpenClawConfig(input);
+    case "gemini-cli":
+      return renderGeminiCliConfig(input);
   }
 }
 
@@ -87,6 +90,18 @@ function renderOpenClawConfig(input: RenderClientConfigInput): string {
         };
 
   return JSON.stringify(config, null, 2);
+}
+
+function renderGeminiCliConfig(input: RenderClientConfigInput): string {
+  const args =
+    input.mode === "published"
+      ? [...packageCommand]
+      : ["node", resolveLocalCliPath(input.projectPath), "mcp"];
+
+  return [
+    "# Set XAI_API_KEY in the shell before starting Gemini CLI.",
+    ["gemini mcp add grok-agent-kit", ...args.map(formatShellArgument)].join(" ")
+  ].join("\n");
 }
 
 function resolveLocalCliPath(projectPath?: string): string {

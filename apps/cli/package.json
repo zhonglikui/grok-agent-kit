@@ -1,6 +1,6 @@
 {
   "name": "grok-agent-kit",
-  "version": "0.1.0",
+  "version": "0.2.0",
   "description": "CLI + MCP + skills for xAI Grok",
   "license": "MIT",
   "type": "module",

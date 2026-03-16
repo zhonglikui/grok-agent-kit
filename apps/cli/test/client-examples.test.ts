@@ -48,4 +48,18 @@ describe("client examples alignment", () => {
     expect(claudeCodeExample).toEqual(expected);
     expect(openClawExample).toEqual(expected);
   });
+
+  it("keeps the Gemini CLI example aligned with the published generator output", () => {
+    const example = readFileSync(
+      resolve(repoRoot, "examples/clients/gemini-cli-command.txt"),
+      "utf8"
+    );
+
+    expect(example.trim()).toBe(
+      renderClientConfig({
+        client: "gemini-cli",
+        mode: "published"
+      })
+    );
+  });
 });

@@ -1,0 +1,2 @@
+# Set XAI_API_KEY in the shell before starting Gemini CLI.
+gemini mcp add grok-agent-kit npx -y grok-agent-kit mcp

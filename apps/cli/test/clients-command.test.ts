@@ -65,4 +65,23 @@ describe("clients command", () => {
     expect(stdout[0]).toContain('/apps/cli/dist/bin.js');
     expect(stdout[0]).toContain('"XAI_API_KEY": "YOUR_XAI_API_KEY"');
   });
+
+  it("prints a published Gemini CLI MCP install command", async () => {
+    const stdout: string[] = [];
+    const cli = createCli(stdout);
+
+    await cli.parseAsync([
+      "node",
+      "grok-agent-kit",
+      "clients",
+      "gemini-cli",
+      "--mode",
+      "published"
+    ]);
+
+    expect(stdout[0]).toContain("gemini mcp add grok-agent-kit");
+    expect(stdout[0]).toContain("npx");
+    expect(stdout[0]).toContain("grok-agent-kit");
+    expect(stdout[0]).toContain("mcp");
+  });
 });

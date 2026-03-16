@@ -68,6 +68,7 @@ Use the built-in generator when you want a ready-to-paste config or install comm
 ```bash
 npx -y grok-agent-kit clients codex --mode published
 npx -y grok-agent-kit clients claude-code --mode published
+npx -y grok-agent-kit clients gemini-cli --mode published
 npx -y grok-agent-kit clients openclaw --mode local --project-path /absolute/path/to/grok-agent-kit
 ```
 
@@ -99,11 +100,13 @@ For local development mode, point `--project-path` at your clone root so the gen
 
 - CLI for direct usage
 - MCP over `grok-agent-kit mcp`
-- search guidance for Codex, Claude Code, and OpenClaw
+- search guidance for Codex, Claude Code, OpenClaw, and Gemini CLI
 
 ## More docs
 
 - [Repository README](https://github.com/zhonglikui/grok-agent-kit#readme)
 - [Codex setup](https://github.com/zhonglikui/grok-agent-kit/blob/main/docs/clients/codex.md)
 - [Claude Code setup](https://github.com/zhonglikui/grok-agent-kit/blob/main/docs/clients/claude-code.md)
+- [Gemini CLI setup](https://github.com/zhonglikui/grok-agent-kit/blob/main/docs/clients/gemini-cli.md)
 - [OpenClaw setup](https://github.com/zhonglikui/grok-agent-kit/blob/main/docs/clients/openclaw.md)
+- [Grouped client guides](https://github.com/zhonglikui/grok-agent-kit/blob/main/docs/clients/README.md)

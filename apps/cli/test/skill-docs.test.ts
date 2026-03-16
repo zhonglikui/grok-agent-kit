@@ -10,6 +10,10 @@ describe("skill docs alignment", () => {
     resolve(repoRoot, "skills/codex/README.md"),
     "utf8"
   );
+  const geminiSkill = readFileSync(
+    resolve(repoRoot, "skills/gemini-cli/SKILL.md"),
+    "utf8"
+  );
 
   it("teaches Codex how to choose between Grok MCP tools", () => {
     expect(rootSkill).toContain("grok_x_search");
@@ -29,5 +33,13 @@ describe("skill docs alignment", () => {
     expect(codexGuidance).toContain("allowedWebDomains");
     expect(codexGuidance).toContain("resetSession");
     expect(codexGuidance).toContain("session");
+  });
+
+  it("ships Gemini CLI skill guidance for the same MCP surface", () => {
+    expect(geminiSkill).toContain("grok_x_search");
+    expect(geminiSkill).toContain("grok_web_search");
+    expect(geminiSkill).toContain("grok_chat");
+    expect(geminiSkill).toContain("gemini skills");
+    expect(geminiSkill).toContain("session");
   });
 });

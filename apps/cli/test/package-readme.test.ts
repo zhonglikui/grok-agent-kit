@@ -14,6 +14,7 @@ describe("package README alignment", () => {
     expect(packageReadme).toContain("grok-agent-kit clients codex --mode published");
     expect(packageReadme).toContain("grok-agent-kit clients openclaw --mode local");
     expect(packageReadme).toContain("grok-agent-kit clients claude-code --mode published");
+    expect(packageReadme).toContain("grok-agent-kit clients gemini-cli --mode published");
     expect(packageReadme).toContain("grok-agent-kit doctor --bundle ./doctor-bundle.json");
   });
 });

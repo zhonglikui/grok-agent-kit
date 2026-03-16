@@ -145,9 +145,10 @@ Use `grok-agent-kit clients <client>` when you want a ready-to-paste install sni
 - `grok-agent-kit clients codex --mode local --project-path /absolute/path/to/grok-agent-kit`
 - `grok-agent-kit clients codex --mode published`
 - `grok-agent-kit clients claude-code --mode published`
+- `grok-agent-kit clients gemini-cli --mode published`
 - `grok-agent-kit clients openclaw --mode local --project-path /absolute/path/to/grok-agent-kit`
 
-`local` emits snippets that point at `apps/cli/dist/bin.js`, while `published` emits `npx -y grok-agent-kit mcp` usage for npm installs.
+`local` emits snippets that point at `apps/cli/dist/bin.js`, while `published` emits either `npx -y grok-agent-kit mcp` transport snippets or a client-specific add command for npm installs.
 
 ## Conversation continuity
 
@@ -229,14 +230,26 @@ It currently checks:
 - [Client docs index](./docs/clients/README.md)
 - [Codex](./docs/clients/codex.md)
 - [Claude Code](./docs/clients/claude-code.md)
+- [Gemini CLI](./docs/clients/gemini-cli.md)
 - [OpenClaw](./docs/clients/openclaw.md)
+- [MCP command-managed clients](./docs/clients/mcp-command-clients.md)
+- [MCP JSON-config clients](./docs/clients/mcp-json-clients.md)
+- [MCP GUI and marketplace clients](./docs/clients/mcp-gui-clients.md)
+- [Skill `SKILL.md` clients](./docs/clients/skills-skill-md-clients.md)
+- [Skill command-managed clients](./docs/clients/skills-command-clients.md)
 
 Simplified Chinese:
 
 - [客户端文档索引](./docs/clients/README.zh-CN.md)
 - [Codex（中文）](./docs/clients/codex.zh-CN.md)
 - [Claude Code（中文）](./docs/clients/claude-code.zh-CN.md)
+- [Gemini CLI（中文）](./docs/clients/gemini-cli.zh-CN.md)
 - [OpenClaw（中文）](./docs/clients/openclaw.zh-CN.md)
+- [MCP 命令式客户端（中文）](./docs/clients/mcp-command-clients.zh-CN.md)
+- [MCP JSON 配置客户端（中文）](./docs/clients/mcp-json-clients.zh-CN.md)
+- [MCP 图形界面与市场型客户端（中文）](./docs/clients/mcp-gui-clients.zh-CN.md)
+- [`SKILL.md` 技能客户端（中文）](./docs/clients/skills-skill-md-clients.zh-CN.md)
+- [命令式技能客户端（中文）](./docs/clients/skills-command-clients.zh-CN.md)
 
 ## Community and release
 
