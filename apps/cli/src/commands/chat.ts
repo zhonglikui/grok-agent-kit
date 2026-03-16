@@ -1,9 +1,13 @@
 import { resolveLocalImageInputs, toSessionImageReferences } from "@grok-agent-kit/core";
 import { Command } from "commander";
 
+import {
+  executeChatTurn,
+  loadChatConversationState,
+  runInteractiveChat
+} from "../interactive-chat.js";
 import { renderStreamResult, renderTextResult } from "../output.js";
 import { readPipedStdin, resolveOptionalTextInput, resolvePromptInput } from "../prompt-input.js";
-import { createSessionHistoryEntry } from "../session-history.js";
 import type { CliDependencies } from "../types.js";
 
 export function createChatCommand(dependencies: CliDependencies): Command {
@@ -22,6 +26,7 @@ export function createChatCommand(dependencies: CliDependencies): Command {
     .option("--model <model>", "Override model")
     .option("--session <name>", "Continue or create a named local session")
     .option("--reset-session", "Reset the named session before sending the prompt")
+    .option("-i, --interactive", "Start an interactive chat REPL")
     .option(
       "--previous-response-id <id>",
       "Continue from a previous xAI response id"
@@ -42,6 +47,42 @@ export function createChatCommand(dependencies: CliDependencies): Command {
         await dependencies.sessionStore.delete(options.session);
       }
 
+      const system = await resolveOptionalTextInput({
+        value: options.system,
+        filePath: options.systemFile,
+        valueFlag: "--system",
+        fileFlag: "--system-file",
+        label: "system prompt"
+      });
+
+      if (options.interactive) {
+        if (options.store === false) {
+          throw new Error("--interactive cannot be used with --no-store");
+        }
+
+        if (options.json) {
+          throw new Error("--interactive cannot be used with --json");
+        }
+
+        if (options.prompt || options.promptFile) {
+          throw new Error("--interactive cannot be used with prompt input flags");
+        }
+
+        const stdinIsTTY = dependencies.stdinIsTTY ?? (() => process.stdin.isTTY ?? true);
+        if (!stdinIsTTY()) {
+          throw new Error("--interactive requires a TTY and cannot use piped stdin");
+        }
+
+        await runInteractiveChat({
+          dependencies,
+          sessionName: options.session,
+          system,
+          model: options.model,
+          previousResponseId: options.previousResponseId
+        });
+        return;
+      }
+
       const stdinText = await readPipedStdin({
         stdinIsTTY: dependencies.stdinIsTTY,
         readStdin: dependencies.readStdin
@@ -51,77 +92,24 @@ export function createChatCommand(dependencies: CliDependencies): Command {
         promptFile: options.promptFile,
         stdinText
       });
-      const system = await resolveOptionalTextInput({
-        value: options.system,
-        filePath: options.systemFile,
-        valueFlag: "--system",
-        fileFlag: "--system-file",
-        label: "system prompt"
-      });
       const resolvedImages = await resolveLocalImageInputs(options.image ?? []);
-
-      let existingSession = undefined;
-      let previousResponseId = options.previousResponseId as string | undefined;
-
-      if (options.session) {
-        existingSession = await dependencies.sessionStore.get(options.session);
-      }
-      const shouldReplayLocally =
-        resolvedImages.length > 0 || hasImageHistory(existingSession?.history);
-
-      if (options.session && options.store === false && !shouldReplayLocally) {
-        throw new Error("--session cannot be used with --no-store");
-      }
-
-      if (options.previousResponseId && shouldReplayLocally) {
-        throw new Error(
-          "--previous-response-id cannot be used with image-backed chats; use --session instead"
-        );
-      }
-
-      if (!previousResponseId && options.session && !shouldReplayLocally) {
-        previousResponseId = existingSession?.responseId;
-      }
-
-      let streamedText = "";
-      const result = await dependencies.service.chat({
+      const state = await loadChatConversationState({
+        dependencies,
+        sessionName: options.session,
+        previousResponseId: options.previousResponseId
+      });
+      const { result, streamedText } = await executeChatTurn({
+        dependencies,
         prompt,
+        state,
+        sessionName: options.session,
         system,
         model: options.model,
-        ...(resolvedImages.length > 0 ? { images: resolvedImages } : {}),
-        ...(shouldReplayLocally && existingSession?.history
-          ? { history: existingSession.history }
-          : {}),
-        previousResponseId: shouldReplayLocally ? undefined : previousResponseId,
-        store: shouldReplayLocally ? false : options.session ? true : options.store,
-        ...(options.stream
-          ? {
-              onTextDelta: async (chunk: string) => {
-                streamedText += chunk;
-                dependencies.writeStdoutRaw(chunk);
-              }
-            }
-          : {})
+        images: resolvedImages,
+        previousResponseId: options.previousResponseId,
+        store: options.session ? true : options.store,
+        stream: options.stream
       });
-
-      const nextResponseId = result.responseId ?? existingSession?.responseId;
-
-      if (options.session && nextResponseId) {
-        const timestamp = new Date().toISOString();
-        await dependencies.sessionStore.set(options.session, {
-          responseId: nextResponseId,
-          updatedAt: timestamp,
-          history: [
-            ...(existingSession?.history ?? []),
-            createSessionHistoryEntry(
-              prompt,
-              result,
-              timestamp,
-              toSessionImageReferences(resolvedImages)
-            )
-          ]
-        });
-      }
 
       if (options.stream) {
         renderStreamResult(
@@ -142,10 +130,4 @@ function collectImagePath(value: string, previous: string[]): string[] {
     ...previous,
     value
   ];
-}
-
-function hasImageHistory(
-  history: Array<{ images?: unknown[] }> | undefined
-): boolean {
-  return history?.some((entry) => (entry.images?.length ?? 0) > 0) ?? false;
 }

@@ -9,6 +9,8 @@ import { createModelsCommand } from "./commands/models.js";
 import { createSessionsCommand } from "./commands/sessions.js";
 import { createWebSearchCommand } from "./commands/web-search.js";
 import { createXSearchCommand } from "./commands/x-search.js";
+import { createReadlineInteractiveConsole } from "./interactive-chat.js";
+import { createFileReplHistoryStore } from "./repl-history.js";
 import { createFileSessionStore } from "./session-store.js";
 import type { CliDependencies } from "./types.js";
 
@@ -44,6 +46,8 @@ export async function runCli(argv = process.argv): Promise<void> {
       models: async (includeRaw) => getService().models(includeRaw)
     },
     sessionStore: createFileSessionStore(),
+    createInteractiveConsole: () => createReadlineInteractiveConsole(),
+    replHistoryStore: createFileReplHistoryStore(),
     startMcpServer: async () => {
       await startStdioMcpServer({ service: getService() });
     },

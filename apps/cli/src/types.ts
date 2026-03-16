@@ -19,9 +19,22 @@ export interface CliDependencies {
   service: CliService;
   sessionStore: SessionStore;
   startMcpServer: () => Promise<void>;
+  createInteractiveConsole?: () => Promise<InteractiveConsole> | InteractiveConsole;
+  replHistoryStore?: ReplHistoryStore;
   stdinIsTTY?: () => boolean;
   readStdin?: () => Promise<string>;
   writeStdout: (value: string) => void;
   writeStdoutRaw: (value: string) => void;
   writeStderr: (value: string) => void;
+}
+
+export interface InteractiveConsole {
+  prompt(message: string): Promise<string | undefined>;
+  setHistory(entries: string[]): void;
+  close(): Promise<void> | void;
+}
+
+export interface ReplHistoryStore {
+  load(): Promise<string[]>;
+  append(entry: string): Promise<void>;
 }

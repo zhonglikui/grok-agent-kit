@@ -62,6 +62,8 @@ npx -y grok-agent-kit chat --prompt "Stream a quick summary" --stream
 npx -y grok-agent-kit chat --prompt-file ./context.txt
 npx -y grok-agent-kit chat --prompt "Describe this screenshot" --image ./screen.png
 npx -y grok-agent-kit chat --prompt "Analyze these logs:" < ./logs.txt
+npx -y grok-agent-kit chat --interactive
+npx -y grok-agent-kit chat --interactive --session research
 npx -y grok-agent-kit chat --session research --prompt "Summarize the latest Grok updates"
 npx -y grok-agent-kit chat --session research --prompt "Turn that into a release note draft"
 npx -y grok-agent-kit chat --session vision --prompt "Describe this screenshot" --image ./screen.png
@@ -90,6 +92,8 @@ node apps/cli/dist/bin.js chat --prompt "Stream a local reply" --stream
 node apps/cli/dist/bin.js chat --prompt-file ./context.txt
 node apps/cli/dist/bin.js chat --prompt "Describe this screenshot" --image ./screen.png
 Get-Content ./logs.txt | node apps/cli/dist/bin.js chat --prompt "Analyze these logs:"
+node apps/cli/dist/bin.js chat --interactive
+node apps/cli/dist/bin.js chat --interactive --session demo
 node apps/cli/dist/bin.js chat --session demo --prompt "Start a local-first conversation"
 node apps/cli/dist/bin.js chat --session vision --prompt "Describe this screenshot" --image ./screen.png
 node apps/cli/dist/bin.js chat --session vision --prompt "What changed after that?"
@@ -109,8 +113,13 @@ node apps/cli/dist/bin.js mcp
 `grok-agent-kit` 现在支持 CLI 的本地会话持久化，以及 MCP 客户端显式传入响应链路状态。
 
 - 用 `chat --session <name>` 在多次调用之间继续同一个本地命名会话。
+- 用 `chat --interactive` 或 `chat -i` 启动本地 REPL，并逐轮流式输出回复。
+- 用 `chat --interactive --session <name>` 在终端 REPL 中恢复并自动保存同一个命名本地会话。
 - 用 `chat --reset-session --session <name>` 重置并重新开始该命名会话。
 - 用 `chat --image <path>` 一次或多次附加本地 PNG 或 JPEG 图片。
+- 在交互式 chat 中，可用 `/image <path>` 为下一条用户消息临时排队一张本地 PNG 或 JPEG 图片。
+- 在交互式 chat 中，可用 `/reset` 清空当前对话；如果绑定了命名会话，也会删除对应的本地会话记录。
+- 在交互式 chat 中，可用 `/exit` 干净退出 REPL。
 - 用 `chat --stream` 在 xAI 逐步返回内容时直接输出文本增量。
 - 用 `x-search --stream` 和 `web-search --stream` 流式输出搜索文本结果。
 - 用 `x-search --session <name>` 和 `web-search --session <name>` 在同一个命名会话里继续搜索工作流。
@@ -139,6 +148,7 @@ node apps/cli/dist/bin.js mcp
 - `chat --system-file <path>` 可从文件读取较长的 system prompt，便于复用。
 - 如果命令接收到管道 stdin，会把管道内容追加到 `--prompt` 或 `--prompt-file` 之后，并用一个空行分隔。
 - 也可以只使用管道 stdin，不传 `--prompt`，直接把完整 prompt 内容通过管道送入。
+- 交互式 chat 需要 TTY，不能和 `--prompt`、`--prompt-file` 或管道 stdin 混用。
 
 ## 诊断
 

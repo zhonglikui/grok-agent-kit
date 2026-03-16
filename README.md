@@ -63,6 +63,8 @@ npx -y grok-agent-kit chat --prompt "Stream a quick summary" --stream
 npx -y grok-agent-kit chat --prompt-file ./context.txt
 npx -y grok-agent-kit chat --prompt "Describe this screenshot" --image ./screen.png
 npx -y grok-agent-kit chat --prompt "Analyze these logs:" < ./logs.txt
+npx -y grok-agent-kit chat --interactive
+npx -y grok-agent-kit chat --interactive --session research
 npx -y grok-agent-kit chat --session research --prompt "Summarize the latest Grok updates"
 npx -y grok-agent-kit chat --session research --prompt "Turn that into a release note draft"
 npx -y grok-agent-kit chat --session vision --prompt "Describe this screenshot" --image ./screen.png
@@ -91,6 +93,8 @@ node apps/cli/dist/bin.js chat --prompt "Stream a local reply" --stream
 node apps/cli/dist/bin.js chat --prompt-file ./context.txt
 node apps/cli/dist/bin.js chat --prompt "Describe this screenshot" --image ./screen.png
 Get-Content ./logs.txt | node apps/cli/dist/bin.js chat --prompt "Analyze these logs:"
+node apps/cli/dist/bin.js chat --interactive
+node apps/cli/dist/bin.js chat --interactive --session demo
 node apps/cli/dist/bin.js chat --session demo --prompt "Start a local-first conversation"
 node apps/cli/dist/bin.js chat --session vision --prompt "Describe this screenshot" --image ./screen.png
 node apps/cli/dist/bin.js chat --session vision --prompt "What changed after that?"
@@ -110,8 +114,13 @@ node apps/cli/dist/bin.js mcp
 `grok-agent-kit` now supports local conversation persistence for the CLI and explicit response chaining for MCP clients.
 
 - Use `chat --session <name>` to continue a named local session across invocations.
+- Use `chat --interactive` or `chat -i` for a local REPL that streams each reply turn by turn.
+- Use `chat --interactive --session <name>` to resume and auto-save the same named local session from a terminal REPL.
 - Use `chat --reset-session --session <name>` to start that named session over.
 - Use `chat --image <path>` one or more times to attach local PNG or JPEG files.
+- Inside interactive chat, use `/image <path>` to queue a local PNG or JPEG for the next user message only.
+- Inside interactive chat, use `/reset` to clear the active conversation and delete the named local session when one is attached.
+- Inside interactive chat, use `/exit` to leave the REPL cleanly.
 - Use `chat --stream` to print chat text incrementally as xAI sends deltas.
 - Use `x-search --stream` and `web-search --stream` to stream search text incrementally.
 - Use `x-search --session <name>` and `web-search --session <name>` to continue search workflows in the same named session.
@@ -140,6 +149,7 @@ node apps/cli/dist/bin.js mcp
 - Use `--system-file <path>` with `chat` for reusable long-form system prompts.
 - Pipe stdin into any prompt command; piped content is appended after `--prompt` / `--prompt-file` with a blank line separator.
 - Stdin-only usage also works when you omit `--prompt` entirely and pipe the full prompt content in.
+- Interactive chat requires a TTY and does not combine with `--prompt`, `--prompt-file`, or piped stdin.
 
 ## Diagnostics
 
