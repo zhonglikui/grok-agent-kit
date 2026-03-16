@@ -23,6 +23,12 @@
 }
 ```
 
+你也可以通过下面的命令直接生成同样的 JSON 片段：
+
+```bash
+grok-agent-kit clients openclaw --mode local --project-path /absolute/path/to/grok-agent-kit
+```
+
 ## 发布后的 npm 配置
 
 ```json
@@ -37,6 +43,12 @@
     }
   }
 }
+```
+
+或者直接生成：
+
+```bash
+grok-agent-kit clients openclaw --mode published
 ```
 
 ## 可选的本地认证管理

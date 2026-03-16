@@ -13,6 +13,12 @@ args = ["/absolute/path/to/grok-agent-kit/apps/cli/dist/bin.js", "mcp"]
 env = { XAI_API_KEY = "YOUR_XAI_API_KEY" }
 ```
 
+Generate the same snippet locally with:
+
+```bash
+grok-agent-kit clients codex --mode local --project-path /absolute/path/to/grok-agent-kit
+```
+
 You can adapt `examples/clients/codex-config.toml` directly.
 
 ## Published package config
@@ -24,6 +30,12 @@ After npm publication:
 command = "npx"
 args = ["-y", "grok-agent-kit", "mcp"]
 env = { XAI_API_KEY = "YOUR_XAI_API_KEY" }
+```
+
+Or generate it with:
+
+```bash
+grok-agent-kit clients codex --mode published
 ```
 
 ## Optional local auth management

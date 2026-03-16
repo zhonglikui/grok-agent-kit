@@ -17,6 +17,15 @@
 - [Claude Code](./claude-code.zh-CN.md)
 - [OpenClaw](./openclaw.zh-CN.md)
 
+## 用 CLI 生成接入片段
+
+如果你不想手工复制示例配置，可以直接用内置生成器输出可粘贴的客户端配置：
+
+- `grok-agent-kit clients codex --mode local --project-path /absolute/path/to/grok-agent-kit`
+- `grok-agent-kit clients codex --mode published`
+- `grok-agent-kit clients claude-code --mode published`
+- `grok-agent-kit clients openclaw --mode local --project-path /absolute/path/to/grok-agent-kit`
+
 ## 推荐搭配的本地命令
 
 这些命令不属于 MCP，但很适合和代理客户端配套使用：

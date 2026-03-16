@@ -84,6 +84,9 @@ npx -y grok-agent-kit x-search --interactive --allow-handle xai
 npx -y grok-agent-kit web-search --interactive --session research --allow-domain docs.x.ai
 npx -y grok-agent-kit x-search --session research --prompt "Latest xAI posts"
 npx -y grok-agent-kit web-search --session research --prompt "Latest xAI docs"
+npx -y grok-agent-kit clients codex --mode published
+npx -y grok-agent-kit clients claude-code --mode published
+npx -y grok-agent-kit clients openclaw --mode local --project-path /absolute/path/to/grok-agent-kit
 npx -y grok-agent-kit sessions list
 npx -y grok-agent-kit sessions list --search "auth|login" --model grok-4 --limit 5
 npx -y grok-agent-kit models
@@ -119,10 +122,24 @@ node apps/cli/dist/bin.js x-search --interactive --allow-handle xai
 node apps/cli/dist/bin.js web-search --interactive --session demo --allow-domain docs.x.ai
 node apps/cli/dist/bin.js x-search --session demo --prompt "Find recent xAI posts"
 node apps/cli/dist/bin.js web-search --session demo --prompt "Find updated xAI docs"
+node apps/cli/dist/bin.js clients codex --mode local --project-path /absolute/path/to/grok-agent-kit
+node apps/cli/dist/bin.js clients claude-code --mode published
+node apps/cli/dist/bin.js clients openclaw --mode published
 node apps/cli/dist/bin.js sessions list
 node apps/cli/dist/bin.js sessions list --search "release|launch" --model grok-4 --limit 3
 node apps/cli/dist/bin.js mcp
 ```
+
+## Client config generator
+
+Use `grok-agent-kit clients <client>` when you want a ready-to-paste install snippet for a supported agent client:
+
+- `grok-agent-kit clients codex --mode local --project-path /absolute/path/to/grok-agent-kit`
+- `grok-agent-kit clients codex --mode published`
+- `grok-agent-kit clients claude-code --mode published`
+- `grok-agent-kit clients openclaw --mode local --project-path /absolute/path/to/grok-agent-kit`
+
+`local` emits snippets that point at `apps/cli/dist/bin.js`, while `published` emits `npx -y grok-agent-kit mcp` usage for npm installs.
 
 ## Conversation continuity
 

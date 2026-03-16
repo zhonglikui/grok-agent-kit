@@ -5,6 +5,7 @@ import { Command } from "commander";
 import { createDefaultCliAuthService } from "./auth-service.js";
 import { createAuthCommand } from "./commands/auth.js";
 import { createChatCommand } from "./commands/chat.js";
+import { createClientsCommand } from "./commands/clients.js";
 import { createDoctorCommand } from "./commands/doctor.js";
 import { createMcpCommand } from "./commands/mcp.js";
 import { createModelsCommand } from "./commands/models.js";
@@ -24,6 +25,7 @@ export function buildCli(dependencies: CliDependencies): Command {
     .description("CLI + MCP + skills for xAI Grok")
     .addCommand(createAuthCommand(dependencies))
     .addCommand(createChatCommand(dependencies))
+    .addCommand(createClientsCommand(dependencies))
     .addCommand(createDoctorCommand(dependencies))
     .addCommand(createXSearchCommand(dependencies))
     .addCommand(createWebSearchCommand(dependencies))

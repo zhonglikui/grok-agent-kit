@@ -83,6 +83,9 @@ npx -y grok-agent-kit x-search --interactive --allow-handle xai
 npx -y grok-agent-kit web-search --interactive --session research --allow-domain docs.x.ai
 npx -y grok-agent-kit x-search --session research --prompt "Latest xAI posts"
 npx -y grok-agent-kit web-search --session research --prompt "Latest xAI docs"
+npx -y grok-agent-kit clients codex --mode published
+npx -y grok-agent-kit clients claude-code --mode published
+npx -y grok-agent-kit clients openclaw --mode local --project-path /absolute/path/to/grok-agent-kit
 npx -y grok-agent-kit sessions list
 npx -y grok-agent-kit sessions list --search "auth|login" --model grok-4 --limit 5
 npx -y grok-agent-kit models
@@ -118,10 +121,24 @@ node apps/cli/dist/bin.js x-search --interactive --allow-handle xai
 node apps/cli/dist/bin.js web-search --interactive --session demo --allow-domain docs.x.ai
 node apps/cli/dist/bin.js x-search --session demo --prompt "Find recent xAI posts"
 node apps/cli/dist/bin.js web-search --session demo --prompt "Find updated xAI docs"
+node apps/cli/dist/bin.js clients codex --mode local --project-path /absolute/path/to/grok-agent-kit
+node apps/cli/dist/bin.js clients claude-code --mode published
+node apps/cli/dist/bin.js clients openclaw --mode published
 node apps/cli/dist/bin.js sessions list
 node apps/cli/dist/bin.js sessions list --search "release|launch" --model grok-4 --limit 3
 node apps/cli/dist/bin.js mcp
 ```
+
+## 客户端配置生成器
+
+当你想快速拿到可直接粘贴的客户端接入片段时，可以使用 `grok-agent-kit clients <client>`：
+
+- `grok-agent-kit clients codex --mode local --project-path /absolute/path/to/grok-agent-kit`
+- `grok-agent-kit clients codex --mode published`
+- `grok-agent-kit clients claude-code --mode published`
+- `grok-agent-kit clients openclaw --mode local --project-path /absolute/path/to/grok-agent-kit`
+
+`local` 模式会生成指向 `apps/cli/dist/bin.js` 的本地开发片段，`published` 模式则会生成适用于 npm 安装场景的 `npx -y grok-agent-kit mcp` 配置。
 
 ## 会话连续性
 

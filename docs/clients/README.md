@@ -17,6 +17,15 @@ Use these guides to connect `grok-agent-kit` to supported agent clients.
 - [Claude Code](./claude-code.md)
 - [OpenClaw](./openclaw.md)
 
+## Generate snippets from the CLI
+
+Use the built-in generator when you want a ready-to-paste client config instead of copying examples by hand:
+
+- `grok-agent-kit clients codex --mode local --project-path /absolute/path/to/grok-agent-kit`
+- `grok-agent-kit clients codex --mode published`
+- `grok-agent-kit clients claude-code --mode published`
+- `grok-agent-kit clients openclaw --mode local --project-path /absolute/path/to/grok-agent-kit`
+
 ## Recommended local companion commands
 
 These are optional local terminal workflows outside MCP, but they pair well with agent clients:

@@ -8,12 +8,24 @@
 claude mcp add grok-agent-kit --scope user node /absolute/path/to/grok-agent-kit/apps/cli/dist/bin.js mcp
 ```
 
+You can print the same command with:
+
+```bash
+grok-agent-kit clients claude-code --mode local --project-path /absolute/path/to/grok-agent-kit
+```
+
 Set `XAI_API_KEY` before launching Claude Code, or use the client's MCP environment configuration support.
 
 ## Published package command
 
 ```bash
 claude mcp add grok-agent-kit --scope user npx -y grok-agent-kit mcp
+```
+
+You can also generate it with:
+
+```bash
+grok-agent-kit clients claude-code --mode published
 ```
 
 ## Optional local auth management

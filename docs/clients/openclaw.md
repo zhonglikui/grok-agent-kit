@@ -23,6 +23,12 @@ Add an MCP server entry that launches the built CLI:
 }
 ```
 
+Generate the same JSON locally with:
+
+```bash
+grok-agent-kit clients openclaw --mode local --project-path /absolute/path/to/grok-agent-kit
+```
+
 ## Published package config
 
 ```json
@@ -37,6 +43,12 @@ Add an MCP server entry that launches the built CLI:
     }
   }
 }
+```
+
+Or generate it with:
+
+```bash
+grok-agent-kit clients openclaw --mode published
 ```
 
 ## Optional local auth management

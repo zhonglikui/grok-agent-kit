@@ -8,10 +8,15 @@ Community-built, unofficial CLI + MCP + skills toolkit for xAI Grok.
 
 ```bash
 npx -y grok-agent-kit chat --prompt "Hello from Grok"
+npx -y grok-agent-kit auth status
+npx -y grok-agent-kit auth validate-management
 npx -y grok-agent-kit doctor
 npx -y grok-agent-kit chat --prompt "Stream a quick summary" --stream
 npx -y grok-agent-kit chat --prompt-file ./context.txt
 npx -y grok-agent-kit chat --prompt "Analyze these logs:" < ./logs.txt
+npx -y grok-agent-kit chat --interactive
+npx -y grok-agent-kit x-search --interactive
+npx -y grok-agent-kit web-search --interactive
 npx -y grok-agent-kit chat --session notes --prompt "Start a persistent CLI session"
 npx -y grok-agent-kit chat --session notes --prompt "Continue that session"
 npx -y grok-agent-kit sessions show notes
@@ -31,6 +36,8 @@ npx -y grok-agent-kit mcp
 ```bash
 XAI_API_KEY=your_key_here
 XAI_BASE_URL=https://api.x.ai/v1
+XAI_MANAGEMENT_API_KEY=your_management_key_here
+XAI_MANAGEMENT_BASE_URL=https://management-api.x.ai
 GROK_AGENT_KIT_MODEL=grok-4
 GROK_AGENT_KIT_TIMEOUT_MS=30000
 GROK_AGENT_KIT_RETRY_MAX_ATTEMPTS=3
@@ -43,7 +50,19 @@ The CLI retries transient rate-limit, timeout, and `5xx` failures by default so 
 ## Doctor
 
 - `doctor` checks local environment and state-path basics before you start using chat, search, or MCP
-- current checks include Node.js version, `XAI_API_KEY`, `XAI_BASE_URL`, `GROK_AGENT_KIT_MODEL`, live xAI API connectivity, and local `sessions.json` readability
+- current checks include Node.js version, `XAI_API_KEY`, `XAI_BASE_URL`, `XAI_MANAGEMENT_API_KEY`, `XAI_MANAGEMENT_BASE_URL`, `GROK_AGENT_KIT_MODEL`, live xAI API connectivity, live management API connectivity when configured, and local `sessions.json` readability
+
+## Client setup generator
+
+Use the built-in generator when you want a ready-to-paste config or install command for a supported client:
+
+```bash
+npx -y grok-agent-kit clients codex --mode published
+npx -y grok-agent-kit clients claude-code --mode published
+npx -y grok-agent-kit clients openclaw --mode local --project-path /absolute/path/to/grok-agent-kit
+```
+
+For local development mode, point `--project-path` at your clone root so the generated snippet references `apps/cli/dist/bin.js`.
 
 ## Local sessions
 

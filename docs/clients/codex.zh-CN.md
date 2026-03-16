@@ -13,6 +13,12 @@ args = ["/absolute/path/to/grok-agent-kit/apps/cli/dist/bin.js", "mcp"]
 env = { XAI_API_KEY = "YOUR_XAI_API_KEY" }
 ```
 
+也可以直接通过下面的命令生成同样的片段：
+
+```bash
+grok-agent-kit clients codex --mode local --project-path /absolute/path/to/grok-agent-kit
+```
+
 你可以直接从 `examples/clients/codex-config.toml` 改起。
 
 ## 发布后的 npm 配置
@@ -24,6 +30,12 @@ env = { XAI_API_KEY = "YOUR_XAI_API_KEY" }
 command = "npx"
 args = ["-y", "grok-agent-kit", "mcp"]
 env = { XAI_API_KEY = "YOUR_XAI_API_KEY" }
+```
+
+或者直接生成：
+
+```bash
+grok-agent-kit clients codex --mode published
 ```
 
 ## 可选的本地认证管理

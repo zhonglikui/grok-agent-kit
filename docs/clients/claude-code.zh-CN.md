@@ -8,12 +8,24 @@
 claude mcp add grok-agent-kit --scope user node /absolute/path/to/grok-agent-kit/apps/cli/dist/bin.js mcp
 ```
 
+你也可以通过下面的命令直接生成同样的接入命令：
+
+```bash
+grok-agent-kit clients claude-code --mode local --project-path /absolute/path/to/grok-agent-kit
+```
+
 启动 Claude Code 前请先设置 `XAI_API_KEY`，或者使用客户端自身的 MCP 环境变量配置能力。
 
 ## 发布后的 npm 命令
 
 ```bash
 claude mcp add grok-agent-kit --scope user npx -y grok-agent-kit mcp
+```
+
+或者直接生成：
+
+```bash
+grok-agent-kit clients claude-code --mode published
 ```
 
 ## 可选的本地认证管理

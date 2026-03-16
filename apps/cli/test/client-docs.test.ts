@@ -19,6 +19,7 @@ describe("client docs alignment", () => {
     expect(docs).toContain("chat --interactive");
     expect(docs).toContain("x-search --interactive");
     expect(docs).toContain("web-search --interactive");
+    expect(docs).toContain("grok-agent-kit clients");
   });
 
   it("keeps Simplified Chinese client docs readable and aligned", () => {
@@ -35,5 +36,6 @@ describe("client docs alignment", () => {
     expect(docs).toContain("chat --interactive");
     expect(docs).toContain("x-search --interactive");
     expect(docs).toContain("web-search --interactive");
+    expect(docs).toContain("grok-agent-kit clients");
   });
 });
