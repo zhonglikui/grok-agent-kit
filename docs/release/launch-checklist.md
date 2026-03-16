@@ -27,9 +27,10 @@ npm run smoke:pack-install
 ## Publish
 
 - Confirm the npm account has permission to publish `grok-agent-kit`.
-- Verify the `NPM_TOKEN` repository secret before using `.github/workflows/publish.yml`.
+- Confirm npm Trusted Publishing is configured for this package and `.github/workflows/publish.yml`.
 - Run `npm publish --workspace apps/cli --access public --dry-run` locally if you want one final manual check.
 - Trigger the GitHub Actions publish workflow for the real release after verification is clean.
+- Remove any unused legacy `NPM_TOKEN` repository secret after the migration is complete.
 
 ## Post-publish
 

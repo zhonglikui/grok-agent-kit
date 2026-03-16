@@ -50,7 +50,5 @@ jobs:
           if [ "${{ inputs.dry_run }}" = "true" ]; then
             npm publish --workspace apps/cli --access public --dry-run
           else
-            npm publish --workspace apps/cli --access public --provenance
+            npm publish --workspace apps/cli --access public
           fi
-        env:
-          NODE_AUTH_TOKEN: ${{ secrets.NPM_TOKEN }}

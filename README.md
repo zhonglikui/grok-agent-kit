@@ -243,7 +243,7 @@ Simplified Chinese:
 - Read [CONTRIBUTING.md](./CONTRIBUTING.md) before opening a PR
 - Report vulnerabilities through [SECURITY.md](./SECURITY.md)
 - Review behavior expectations in [CODE_OF_CONDUCT.md](./CODE_OF_CONDUCT.md)
-- Publish from GitHub Actions with `.github/workflows/publish.yml` after setting the `NPM_TOKEN` repository secret
+- Publish from GitHub Actions with `.github/workflows/publish.yml` after configuring npm Trusted Publishing for this repository
 - Use [the launch checklist](./docs/release/launch-checklist.md) before a public npm release
 - Reuse [the community listing templates](./docs/release/community-listings.md) for npm, MCP, and skills submissions
 

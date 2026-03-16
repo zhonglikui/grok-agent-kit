@@ -27,9 +27,10 @@ npm run smoke:pack-install
 ## 发布
 
 - 确认当前 npm 账号拥有发布 `grok-agent-kit` 的权限。
-- 触发 `.github/workflows/publish.yml` 之前，先确认仓库已配置 `NPM_TOKEN`。
+- 触发 `.github/workflows/publish.yml` 之前，先确认 npm 已为当前包和 `.github/workflows/publish.yml` 配置 Trusted Publishing。
 - 如需最后一次人工确认，可先本地运行 `npm publish --workspace apps/cli --access public --dry-run`。
 - 所有验证通过后，再用 GitHub Actions 执行正式发布。
+- 迁移完成后，删除仓库里不再使用的旧 `NPM_TOKEN` 密钥。
 
 ## 发布后
 
