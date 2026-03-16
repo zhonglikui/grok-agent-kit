@@ -7,7 +7,7 @@ These rules apply to the entire repository.
 - Work autonomously once the task is clear. Do not stop for step-by-step approval.
 - Before choosing the next milestone or making a significant architecture or product-scope change, consult the local `gemini` CLI and use the result to inform the decision.
 - When Codex and Gemini discuss a milestone, architecture choice, or implementation question, treat the conclusion as the decision for all remaining steps in that slice. Do not pause again for approval while implementing, documenting, verifying, committing, and pushing that slice.
-- This applies to both already-planned work and newly discovered follow-up work inside the same slice: keep executing until the slice is fully delivered.
+- This applies to both already-planned work and newly discovered follow-up work inside the same slice: continue executing until the slice is fully delivered unless genuinely blocked.
 - If a `gemini` call fails, times out, or is interrupted, retry or fall back to the latest valid Gemini conclusion. Do not stop only because the consultation tool hiccupped.
 - Only interrupt the user when blocked by missing secrets, destructive actions outside the repo, or a genuinely high-risk ambiguity.
 
@@ -39,4 +39,5 @@ These rules apply to the entire repository.
 
 - Codex and Gemini should discuss milestone selection and major implementation direction first.
 - After that discussion, continue every remaining step automatically: implementation, documentation, verification, commit, push, and the next internally obvious follow-up inside the same slice.
+- Do not treat a progress update or phase summary as a stopping point.
 - Do not stop merely to report progress. Progress reports are allowed, but execution should continue unless genuinely blocked.

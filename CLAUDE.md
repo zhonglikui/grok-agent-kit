@@ -7,6 +7,8 @@ These rules apply to the entire repository.
 - Work autonomously once the task is clear. Do not pause for per-step approval.
 - Before selecting the next milestone or making a major architecture change, consult the local `gemini` CLI and use that recommendation when deciding what to implement next.
 - Once Codex and Gemini reach a conclusion for a slice, execute every remaining step automatically without asking again: implementation, docs, verification, commit, and push.
+- This same-slice autonomy includes newly discovered follow-up work: continue executing until the slice is fully delivered unless genuinely blocked.
+- Do not treat a progress update or phase summary as a stopping point.
 - If the `gemini` CLI fails or times out, retry or continue from the latest valid Gemini conclusion. Do not stop solely because the consultation step was interrupted.
 
 ## Verification and push policy
