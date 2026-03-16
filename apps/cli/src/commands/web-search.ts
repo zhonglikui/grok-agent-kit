@@ -1,13 +1,15 @@
 import { Command } from "commander";
 
 import { renderStreamResult, renderTextResult } from "../output.js";
+import { readPipedStdin, resolvePromptInput } from "../prompt-input.js";
 import { createSessionHistoryEntry } from "../session-history.js";
 import type { CliDependencies } from "../types.js";
 
 export function createWebSearchCommand(dependencies: CliDependencies): Command {
   return new Command("web-search")
     .description("Answer a prompt using xAI Web Search")
-    .requiredOption("--prompt <prompt>", "Prompt text")
+    .option("--prompt <prompt>", "Prompt text")
+    .option("-f, --prompt-file <path>", "Read prompt text from a file")
     .option("--model <model>", "Override model")
     .option("--session <name>", "Continue or create a named local session")
     .option("--reset-session", "Reset the named session before sending the prompt")
@@ -37,6 +39,15 @@ export function createWebSearchCommand(dependencies: CliDependencies): Command {
         await dependencies.sessionStore.delete(options.session);
       }
 
+      const prompt = await resolvePromptInput({
+        prompt: options.prompt,
+        promptFile: options.promptFile,
+        stdinText: await readPipedStdin({
+          stdinIsTTY: dependencies.stdinIsTTY,
+          readStdin: dependencies.readStdin
+        })
+      });
+
       let existingSession = undefined;
       let previousResponseId = options.previousResponseId as string | undefined;
 
@@ -49,7 +60,7 @@ export function createWebSearchCommand(dependencies: CliDependencies): Command {
 
       let streamedText = "";
       const result = await dependencies.service.webSearch({
-        prompt: options.prompt,
+        prompt,
         model: options.model,
         previousResponseId,
         store: options.session ? true : options.store,
@@ -75,7 +86,7 @@ export function createWebSearchCommand(dependencies: CliDependencies): Command {
           updatedAt: timestamp,
           history: [
             ...(existingSession?.history ?? []),
-            createSessionHistoryEntry(options.prompt, result, timestamp)
+            createSessionHistoryEntry(prompt, result, timestamp)
           ]
         });
       }

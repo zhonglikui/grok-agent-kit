@@ -20,7 +20,7 @@ export function createDoctorCommand(dependencies: CliDependencies): Command {
     .description("Check local environment and configuration")
     .option("--json", "Print JSON output")
     .action(async (options) => {
-      const checks = await collectDoctorChecks();
+      const checks = await collectDoctorChecks(dependencies);
       const summary = summarizeChecks(checks);
 
       if (options.json) {
@@ -51,13 +51,29 @@ export function createDoctorCommand(dependencies: CliDependencies): Command {
     });
 }
 
-async function collectDoctorChecks(): Promise<DoctorCheck[]> {
+async function collectDoctorChecks(
+  dependencies: CliDependencies
+): Promise<DoctorCheck[]> {
   const checks: DoctorCheck[] = [];
 
-  checks.push(checkNodeVersion());
-  checks.push(checkApiKey(process.env.XAI_API_KEY));
-  checks.push(checkBaseUrl(process.env.XAI_BASE_URL));
-  checks.push(checkDefaultModel(process.env.GROK_AGENT_KIT_MODEL));
+  const nodeCheck = checkNodeVersion();
+  const apiKeyCheck = checkApiKey(process.env.XAI_API_KEY);
+  const baseUrlCheck = checkBaseUrl(process.env.XAI_BASE_URL);
+  const modelCheck = checkDefaultModel(process.env.GROK_AGENT_KIT_MODEL);
+
+  checks.push(nodeCheck);
+  checks.push(apiKeyCheck);
+  checks.push(baseUrlCheck);
+  checks.push(modelCheck);
+  checks.push(
+    await checkApiConnectivity(
+      {
+        apiKey: apiKeyCheck,
+        baseUrl: baseUrlCheck
+      },
+      dependencies
+    )
+  );
 
   const stateDirectory = join(homedir(), ".grok-agent-kit");
   checks.push(await checkStateDirectory(stateDirectory));
@@ -72,6 +88,45 @@ function summarizeChecks(checks: DoctorCheck[]) {
     warnings: checks.filter((check) => check.status === "WARN").length,
     passes: checks.filter((check) => check.status === "PASS").length
   };
+}
+
+async function checkApiConnectivity(
+  prerequisites: {
+    apiKey: DoctorCheck;
+    baseUrl: DoctorCheck;
+  },
+  dependencies: CliDependencies
+): Promise<DoctorCheck> {
+  if (
+    prerequisites.apiKey.status === "FAIL" ||
+    prerequisites.baseUrl.status === "FAIL"
+  ) {
+    return {
+      status: "WARN",
+      label: "XAI API connectivity",
+      detail: "Skipped because API credentials or base URL are not valid yet.",
+      fix: "Fix the failing XAI environment checks above, then re-run `grok-agent-kit doctor`."
+    };
+  }
+
+  try {
+    await dependencies.service.models();
+
+    return {
+      status: "PASS",
+      label: "XAI API connectivity",
+      detail: "Reached the xAI models endpoint successfully."
+    };
+  } catch (error) {
+    const detail = error instanceof Error ? error.message : "Unknown API connectivity error";
+
+    return {
+      status: "FAIL",
+      label: "XAI API connectivity",
+      detail,
+      fix: "Verify your network access, `XAI_API_KEY`, and `XAI_BASE_URL`, then re-run `grok-agent-kit doctor`."
+    };
+  }
 }
 
 function checkNodeVersion(): DoctorCheck {

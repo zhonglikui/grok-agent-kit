@@ -56,6 +56,8 @@ GROK_AGENT_KIT_RETRY_MAX_DELAY_MS=4000
 npx -y grok-agent-kit chat --prompt "Hello from Grok"
 npx -y grok-agent-kit doctor
 npx -y grok-agent-kit chat --prompt "Stream a quick summary" --stream
+npx -y grok-agent-kit chat --prompt-file ./context.txt
+npx -y grok-agent-kit chat --prompt "Analyze these logs:" < ./logs.txt
 npx -y grok-agent-kit chat --session research --prompt "Summarize the latest Grok updates"
 npx -y grok-agent-kit chat --session research --prompt "Turn that into a release note draft"
 npx -y grok-agent-kit sessions show research
@@ -80,6 +82,8 @@ npm run build
 node apps/cli/dist/bin.js doctor
 node apps/cli/dist/bin.js chat --prompt "Summarize Grok search"
 node apps/cli/dist/bin.js chat --prompt "Stream a local reply" --stream
+node apps/cli/dist/bin.js chat --prompt-file ./context.txt
+Get-Content ./logs.txt | node apps/cli/dist/bin.js chat --prompt "Analyze these logs:"
 node apps/cli/dist/bin.js chat --session demo --prompt "Start a local-first conversation"
 node apps/cli/dist/bin.js sessions show demo
 node apps/cli/dist/bin.js sessions export demo --format markdown --output ./demo-session.md
@@ -112,6 +116,13 @@ node apps/cli/dist/bin.js mcp
 - `sessions export <name> --format json` 会输出规范化后的 JSON，便于备份或程序继续处理。
 - 加上 `--output <path>` 可以直接把导出结果写入文件。
 
+## 管道与文件输入
+
+- `chat`、`x-search`、`web-search` 都支持 `--prompt-file <path>`，可直接读取 UTF-8 文本文件作为 prompt。
+- `chat --system-file <path>` 可从文件读取较长的 system prompt，便于复用。
+- 如果命令接收到管道 stdin，会把管道内容追加到 `--prompt` 或 `--prompt-file` 之后，并用一个空行分隔。
+- 也可以只使用管道 stdin，不传 `--prompt`，直接把完整 prompt 内容通过管道送入。
+
 ## 诊断
 
 可先运行 `grok-agent-kit doctor` 检查本地环境，再使用 chat、search 或 MCP。
@@ -122,6 +133,7 @@ node apps/cli/dist/bin.js mcp
 - `XAI_API_KEY` 是否存在
 - `XAI_BASE_URL` 是否为有效 URL
 - `GROK_AGENT_KIT_MODEL` 是否为空或将回退默认值
+- 在本地前置条件有效时，通过 models endpoint 做一次真实的 xAI API 连通性检查
 - 本地状态目录与 `sessions.json` 是否可读
 
 ## 客户端接入文档

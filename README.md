@@ -57,6 +57,8 @@ Run directly from npm after publication:
 npx -y grok-agent-kit chat --prompt "Hello from Grok"
 npx -y grok-agent-kit doctor
 npx -y grok-agent-kit chat --prompt "Stream a quick summary" --stream
+npx -y grok-agent-kit chat --prompt-file ./context.txt
+npx -y grok-agent-kit chat --prompt "Analyze these logs:" < ./logs.txt
 npx -y grok-agent-kit chat --session research --prompt "Summarize the latest Grok updates"
 npx -y grok-agent-kit chat --session research --prompt "Turn that into a release note draft"
 npx -y grok-agent-kit sessions show research
@@ -81,6 +83,8 @@ npm run build
 node apps/cli/dist/bin.js doctor
 node apps/cli/dist/bin.js chat --prompt "Summarize Grok search"
 node apps/cli/dist/bin.js chat --prompt "Stream a local reply" --stream
+node apps/cli/dist/bin.js chat --prompt-file ./context.txt
+Get-Content ./logs.txt | node apps/cli/dist/bin.js chat --prompt "Analyze these logs:"
 node apps/cli/dist/bin.js chat --session demo --prompt "Start a local-first conversation"
 node apps/cli/dist/bin.js sessions show demo
 node apps/cli/dist/bin.js sessions export demo --format markdown --output ./demo-session.md
@@ -113,6 +117,13 @@ node apps/cli/dist/bin.js mcp
 - `sessions export <name> --format json` prints normalized session JSON for backups or programmatic reuse.
 - Add `--output <path>` to write the export directly to a file.
 
+## Piping and file workflows
+
+- Use `--prompt-file <path>` with `chat`, `x-search`, and `web-search` to load a prompt from a UTF-8 text file.
+- Use `--system-file <path>` with `chat` for reusable long-form system prompts.
+- Pipe stdin into any prompt command; piped content is appended after `--prompt` / `--prompt-file` with a blank line separator.
+- Stdin-only usage also works when you omit `--prompt` entirely and pipe the full prompt content in.
+
 ## Diagnostics
 
 Use `grok-agent-kit doctor` to validate the local setup before using chat, search, or MCP.
@@ -123,6 +134,7 @@ It currently checks:
 - `XAI_API_KEY` presence
 - `XAI_BASE_URL` validity
 - `GROK_AGENT_KIT_MODEL` fallback or value
+- live xAI API connectivity through the models endpoint when local prerequisites are valid
 - local state directory and `sessions.json` readability
 
 ## Client setup docs

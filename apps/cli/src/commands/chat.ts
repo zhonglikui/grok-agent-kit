@@ -1,14 +1,17 @@
 import { Command } from "commander";
 
 import { renderStreamResult, renderTextResult } from "../output.js";
+import { readPipedStdin, resolveOptionalTextInput, resolvePromptInput } from "../prompt-input.js";
 import { createSessionHistoryEntry } from "../session-history.js";
 import type { CliDependencies } from "../types.js";
 
 export function createChatCommand(dependencies: CliDependencies): Command {
   return new Command("chat")
     .description("Send a plain chat prompt to xAI Grok")
-    .requiredOption("--prompt <prompt>", "Prompt text")
+    .option("--prompt <prompt>", "Prompt text")
+    .option("-f, --prompt-file <path>", "Read prompt text from a file")
     .option("--system <system>", "System prompt")
+    .option("--system-file <path>", "Read system prompt from a file")
     .option("--model <model>", "Override model")
     .option("--session <name>", "Continue or create a named local session")
     .option("--reset-session", "Reset the named session before sending the prompt")
@@ -36,6 +39,23 @@ export function createChatCommand(dependencies: CliDependencies): Command {
         await dependencies.sessionStore.delete(options.session);
       }
 
+      const stdinText = await readPipedStdin({
+        stdinIsTTY: dependencies.stdinIsTTY,
+        readStdin: dependencies.readStdin
+      });
+      const prompt = await resolvePromptInput({
+        prompt: options.prompt,
+        promptFile: options.promptFile,
+        stdinText
+      });
+      const system = await resolveOptionalTextInput({
+        value: options.system,
+        filePath: options.systemFile,
+        valueFlag: "--system",
+        fileFlag: "--system-file",
+        label: "system prompt"
+      });
+
       let existingSession = undefined;
       let previousResponseId = options.previousResponseId as string | undefined;
 
@@ -48,8 +68,8 @@ export function createChatCommand(dependencies: CliDependencies): Command {
 
       let streamedText = "";
       const result = await dependencies.service.chat({
-        prompt: options.prompt,
-        system: options.system,
+        prompt,
+        system,
         model: options.model,
         previousResponseId,
         store: options.session ? true : options.store,
@@ -72,7 +92,7 @@ export function createChatCommand(dependencies: CliDependencies): Command {
           updatedAt: timestamp,
           history: [
             ...(existingSession?.history ?? []),
-            createSessionHistoryEntry(options.prompt, result, timestamp)
+            createSessionHistoryEntry(prompt, result, timestamp)
           ]
         });
       }

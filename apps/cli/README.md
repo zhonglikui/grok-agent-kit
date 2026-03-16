@@ -10,6 +10,8 @@ Community-built, unofficial CLI + MCP + skills toolkit for xAI Grok.
 npx -y grok-agent-kit chat --prompt "Hello from Grok"
 npx -y grok-agent-kit doctor
 npx -y grok-agent-kit chat --prompt "Stream a quick summary" --stream
+npx -y grok-agent-kit chat --prompt-file ./context.txt
+npx -y grok-agent-kit chat --prompt "Analyze these logs:" < ./logs.txt
 npx -y grok-agent-kit chat --session notes --prompt "Start a persistent CLI session"
 npx -y grok-agent-kit chat --session notes --prompt "Continue that session"
 npx -y grok-agent-kit sessions show notes
@@ -41,7 +43,7 @@ The CLI retries transient rate-limit, timeout, and `5xx` failures by default so 
 ## Doctor
 
 - `doctor` checks local environment and state-path basics before you start using chat, search, or MCP
-- current checks include Node.js version, `XAI_API_KEY`, `XAI_BASE_URL`, `GROK_AGENT_KIT_MODEL`, and local `sessions.json` readability
+- current checks include Node.js version, `XAI_API_KEY`, `XAI_BASE_URL`, `GROK_AGENT_KIT_MODEL`, live xAI API connectivity, and local `sessions.json` readability
 
 ## Local sessions
 
@@ -56,6 +58,13 @@ The CLI retries transient rate-limit, timeout, and `5xx` failures by default so 
 - `sessions delete <name>` removes a saved session record
 - `sessions export <name> --format markdown|json` exports a saved session to stdout
 - `sessions export <name> --format markdown|json --output <path>` writes the export directly to a file
+
+## Piping and files
+
+- `chat --prompt-file <path>`, `x-search --prompt-file <path>`, and `web-search --prompt-file <path>` load UTF-8 prompt text from a file
+- `chat --system-file <path>` loads a reusable long-form system prompt from a file
+- piped stdin is appended after `--prompt` / `--prompt-file` with a blank line separator
+- stdin-only usage works when you omit `--prompt` and pipe the entire prompt content in
 
 ## Supported surfaces
 

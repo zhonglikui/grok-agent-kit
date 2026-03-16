@@ -1,4 +1,4 @@
-import { mkdtempSync, readFileSync, rmSync } from "node:fs";
+import { mkdtempSync, readFileSync, rmSync, writeFileSync } from "node:fs";
 import { tmpdir } from "node:os";
 import { join } from "node:path";
 
@@ -36,6 +36,8 @@ describe("CLI", () => {
         set: vi.fn(),
         delete: vi.fn()
       },
+      stdinIsTTY: () => true,
+      readStdin: vi.fn(),
       startMcpServer: vi.fn(),
       writeStdout: (value) => stdout.push(value),
       writeStdoutRaw: (value) => stdout.push(value),
@@ -78,6 +80,8 @@ describe("CLI", () => {
           set: vi.fn(),
           delete: vi.fn()
         },
+        stdinIsTTY: () => true,
+        readStdin: vi.fn(),
         startMcpServer: vi.fn(),
         writeStdout: (value) => stdout.push(value),
         writeStdoutRaw: (value) => stdout.push(value),
@@ -117,6 +121,8 @@ describe("CLI", () => {
           set: vi.fn(),
           delete: vi.fn()
         },
+        stdinIsTTY: () => true,
+        readStdin: vi.fn(),
         startMcpServer: vi.fn(),
         writeStdout: (value) => stdout.push(value),
         writeStdoutRaw: (value) => stdout.push(value),
@@ -156,6 +162,8 @@ describe("CLI", () => {
         set: vi.fn(),
         delete: vi.fn()
       },
+      stdinIsTTY: () => true,
+      readStdin: vi.fn(),
       startMcpServer: vi.fn(),
       writeStdout: (value) => stdout.push(value),
       writeStdoutRaw: (value) => stdout.push(value),
@@ -204,6 +212,8 @@ describe("CLI", () => {
     const cli = buildCli({
       service,
       sessionStore,
+      stdinIsTTY: () => true,
+      readStdin: vi.fn(),
       startMcpServer: vi.fn(),
       writeStdout: vi.fn(),
       writeStdoutRaw: vi.fn(),
@@ -272,6 +282,8 @@ describe("CLI", () => {
         set: vi.fn(),
         delete: vi.fn()
       },
+      stdinIsTTY: () => true,
+      readStdin: vi.fn(),
       startMcpServer: vi.fn(),
       writeStdout: (value) => stdout.push(value),
       writeStdoutRaw: (value) => stdout.push(value),
@@ -316,6 +328,8 @@ describe("CLI", () => {
         set: vi.fn(),
         delete: vi.fn()
       },
+      stdinIsTTY: () => true,
+      readStdin: vi.fn(),
       startMcpServer,
       writeStdout: vi.fn(),
       writeStdoutRaw: vi.fn(),
@@ -347,6 +361,8 @@ describe("CLI", () => {
         set: vi.fn(),
         delete: vi.fn()
       },
+      stdinIsTTY: () => true,
+      readStdin: vi.fn(),
       startMcpServer,
       writeStdout: vi.fn(),
       writeStdoutRaw: vi.fn(),
@@ -391,6 +407,8 @@ describe("CLI", () => {
     const cli = buildCli({
       service,
       sessionStore,
+      stdinIsTTY: () => true,
+      readStdin: vi.fn(),
       startMcpServer: vi.fn(),
       writeStdout: vi.fn(),
       writeStdoutRaw: vi.fn(),
@@ -459,6 +477,8 @@ describe("CLI", () => {
         set: vi.fn(),
         delete: vi.fn()
       },
+      stdinIsTTY: () => true,
+      readStdin: vi.fn(),
       startMcpServer: vi.fn(),
       writeStdout: (value) => stdout.push(value),
       writeStdoutRaw: (value) => stdout.push(value),
@@ -531,6 +551,8 @@ describe("CLI", () => {
     const cli = buildCli({
       service,
       sessionStore,
+      stdinIsTTY: () => true,
+      readStdin: vi.fn(),
       startMcpServer: vi.fn(),
       writeStdout: vi.fn(),
       writeStdoutRaw: vi.fn(),
@@ -603,6 +625,8 @@ describe("CLI", () => {
         models: vi.fn()
       },
       sessionStore,
+      stdinIsTTY: () => true,
+      readStdin: vi.fn(),
       startMcpServer: vi.fn(),
       writeStdout: (value) => stdout.push(value),
       writeStdoutRaw: (value) => stdout.push(value),
@@ -667,6 +691,8 @@ describe("CLI", () => {
         models: vi.fn()
       },
       sessionStore,
+      stdinIsTTY: () => true,
+      readStdin: vi.fn(),
       startMcpServer: vi.fn(),
       writeStdout: (value) => stdout.push(value),
       writeStdoutRaw: (value) => stdout.push(value),
@@ -728,6 +754,8 @@ describe("CLI", () => {
         models: vi.fn()
       },
       sessionStore,
+      stdinIsTTY: () => true,
+      readStdin: vi.fn(),
       startMcpServer: vi.fn(),
       writeStdout: (value) => stdout.push(value),
       writeStdoutRaw: (value) => stdout.push(value),
@@ -784,6 +812,8 @@ describe("CLI", () => {
         models: vi.fn()
       },
       sessionStore,
+      stdinIsTTY: () => true,
+      readStdin: vi.fn(),
       startMcpServer: vi.fn(),
       writeStdout: (value) => stdout.push(value),
       writeStdoutRaw: (value) => stdout.push(value),
@@ -936,6 +966,8 @@ describe("CLI", () => {
         set: vi.fn(),
         delete: vi.fn()
       },
+      stdinIsTTY: () => true,
+      readStdin: vi.fn(),
       startMcpServer: vi.fn(),
       writeStdout: (value) => stdout.push(value),
       writeStdoutRaw: (value) => stdout.push(value),
@@ -962,5 +994,335 @@ describe("CLI", () => {
       " world",
       "\n\nSources:\n- https://docs.x.ai"
     ]);
+  });
+
+  it("loads a chat prompt from a file", async () => {
+    const directory = mkdtempSync(join(tmpdir(), "grok-agent-kit-cli-prompt-file-"));
+    tempDirectories.push(directory);
+    const promptFile = join(directory, "prompt.txt");
+    writeFileSync(promptFile, "Prompt from file", "utf8");
+
+    const service = {
+      chat: vi.fn().mockResolvedValue({
+        text: "chat output",
+        citations: []
+      }),
+      xSearch: vi.fn(),
+      webSearch: vi.fn(),
+      models: vi.fn()
+    };
+
+    const cli = buildCli({
+      service,
+      sessionStore: {
+        get: vi.fn(),
+        list: vi.fn(),
+        set: vi.fn(),
+        delete: vi.fn()
+      },
+      stdinIsTTY: () => true,
+      readStdin: vi.fn(),
+      startMcpServer: vi.fn(),
+      writeStdout: vi.fn(),
+      writeStdoutRaw: vi.fn(),
+      writeStderr: vi.fn()
+    });
+
+    await cli.parseAsync([
+      "node",
+      "grok-agent-kit",
+      "chat",
+      "--prompt-file",
+      promptFile
+    ]);
+
+    expect(service.chat).toHaveBeenCalledWith(
+      expect.objectContaining({
+        prompt: "Prompt from file"
+      })
+    );
+  });
+
+  it("combines a direct prompt with piped stdin and stores the resolved prompt", async () => {
+    const service = {
+      chat: vi.fn().mockResolvedValue({
+        text: "combined output",
+        citations: [],
+        responseId: "resp_pipe"
+      }),
+      xSearch: vi.fn(),
+      webSearch: vi.fn(),
+      models: vi.fn()
+    };
+    const sessionStore = {
+      get: vi.fn().mockResolvedValue({
+        name: "pipe-session",
+        responseId: "resp_prev",
+        updatedAt: "2026-03-16T00:00:00.000Z",
+        history: []
+      }),
+      list: vi.fn(),
+      set: vi.fn().mockResolvedValue(undefined),
+      delete: vi.fn()
+    };
+
+    const cli = buildCli({
+      service,
+      sessionStore,
+      stdinIsTTY: () => false,
+      readStdin: vi.fn().mockResolvedValue("line 1\nline 2"),
+      startMcpServer: vi.fn(),
+      writeStdout: vi.fn(),
+      writeStdoutRaw: vi.fn(),
+      writeStderr: vi.fn()
+    });
+
+    await cli.parseAsync([
+      "node",
+      "grok-agent-kit",
+      "chat",
+      "--prompt",
+      "Analyze these logs:",
+      "--session",
+      "pipe-session"
+    ]);
+
+    expect(service.chat).toHaveBeenCalledWith(
+      expect.objectContaining({
+        prompt: "Analyze these logs:\n\nline 1\nline 2"
+      })
+    );
+    expect(sessionStore.set).toHaveBeenCalledWith(
+      "pipe-session",
+      expect.objectContaining({
+        history: expect.arrayContaining([
+          expect.objectContaining({
+            prompt: "Analyze these logs:\n\nline 1\nline 2"
+          })
+        ])
+      })
+    );
+  });
+
+  it("supports stdin-only prompts for x-search", async () => {
+    const service = {
+      chat: vi.fn(),
+      xSearch: vi.fn().mockResolvedValue({
+        text: "x output",
+        citations: []
+      }),
+      webSearch: vi.fn(),
+      models: vi.fn()
+    };
+
+    const cli = buildCli({
+      service,
+      sessionStore: {
+        get: vi.fn(),
+        list: vi.fn(),
+        set: vi.fn(),
+        delete: vi.fn()
+      },
+      stdinIsTTY: () => false,
+      readStdin: vi.fn().mockResolvedValue("piped X prompt"),
+      startMcpServer: vi.fn(),
+      writeStdout: vi.fn(),
+      writeStdoutRaw: vi.fn(),
+      writeStderr: vi.fn()
+    });
+
+    await cli.parseAsync([
+      "node",
+      "grok-agent-kit",
+      "x-search"
+    ]);
+
+    expect(service.xSearch).toHaveBeenCalledWith(
+      expect.objectContaining({
+        prompt: "piped X prompt"
+      })
+    );
+  });
+
+  it("loads a system prompt from a file", async () => {
+    const directory = mkdtempSync(join(tmpdir(), "grok-agent-kit-cli-system-file-"));
+    tempDirectories.push(directory);
+    const systemFile = join(directory, "system.txt");
+    writeFileSync(systemFile, "You are precise.", "utf8");
+
+    const service = {
+      chat: vi.fn().mockResolvedValue({
+        text: "chat output",
+        citations: []
+      }),
+      xSearch: vi.fn(),
+      webSearch: vi.fn(),
+      models: vi.fn()
+    };
+
+    const cli = buildCli({
+      service,
+      sessionStore: {
+        get: vi.fn(),
+        list: vi.fn(),
+        set: vi.fn(),
+        delete: vi.fn()
+      },
+      stdinIsTTY: () => true,
+      readStdin: vi.fn(),
+      startMcpServer: vi.fn(),
+      writeStdout: vi.fn(),
+      writeStdoutRaw: vi.fn(),
+      writeStderr: vi.fn()
+    });
+
+    await cli.parseAsync([
+      "node",
+      "grok-agent-kit",
+      "chat",
+      "--prompt",
+      "Explain this",
+      "--system-file",
+      systemFile
+    ]);
+
+    expect(service.chat).toHaveBeenCalledWith(
+      expect.objectContaining({
+        system: "You are precise."
+      })
+    );
+  });
+
+  it("reports healthy API connectivity in doctor output", async () => {
+    const stdout: string[] = [];
+    vi.stubEnv("XAI_API_KEY", "test-key");
+    vi.stubEnv("XAI_BASE_URL", "https://api.x.ai/v1");
+    vi.stubEnv("GROK_AGENT_KIT_MODEL", "grok-4");
+
+    try {
+      const cli = buildCli({
+        service: {
+          chat: vi.fn(),
+          xSearch: vi.fn(),
+          webSearch: vi.fn(),
+          models: vi.fn().mockResolvedValue({
+            models: [
+              {
+                id: "grok-4",
+                object: "model"
+              }
+            ]
+          })
+        },
+        sessionStore: {
+          get: vi.fn(),
+          list: vi.fn(),
+          set: vi.fn(),
+          delete: vi.fn()
+        },
+        stdinIsTTY: () => true,
+        readStdin: vi.fn(),
+        startMcpServer: vi.fn(),
+        writeStdout: (value) => stdout.push(value),
+        writeStdoutRaw: (value) => stdout.push(value),
+        writeStderr: vi.fn()
+      });
+
+      await cli.parseAsync([
+        "node",
+        "grok-agent-kit",
+        "doctor"
+      ]);
+    } finally {
+      vi.unstubAllEnvs();
+    }
+
+    expect(stdout[0]).toContain("XAI API connectivity");
+    expect(stdout[0]).toContain("PASS");
+  });
+
+  it("reports failed API connectivity in doctor output", async () => {
+    const stdout: string[] = [];
+    vi.stubEnv("XAI_API_KEY", "test-key");
+    vi.stubEnv("XAI_BASE_URL", "https://api.x.ai/v1");
+    vi.stubEnv("GROK_AGENT_KIT_MODEL", "grok-4");
+
+    try {
+      const cli = buildCli({
+        service: {
+          chat: vi.fn(),
+          xSearch: vi.fn(),
+          webSearch: vi.fn(),
+          models: vi.fn().mockRejectedValue(new Error("401 Unauthorized"))
+        },
+        sessionStore: {
+          get: vi.fn(),
+          list: vi.fn(),
+          set: vi.fn(),
+          delete: vi.fn()
+        },
+        stdinIsTTY: () => true,
+        readStdin: vi.fn(),
+        startMcpServer: vi.fn(),
+        writeStdout: (value) => stdout.push(value),
+        writeStdoutRaw: (value) => stdout.push(value),
+        writeStderr: vi.fn()
+      });
+
+      await cli.parseAsync([
+        "node",
+        "grok-agent-kit",
+        "doctor"
+      ]);
+    } finally {
+      vi.unstubAllEnvs();
+    }
+
+    expect(stdout[0]).toContain("XAI API connectivity");
+    expect(stdout[0]).toContain("401 Unauthorized");
+    expect(stdout[0]).toContain("FAIL");
+  });
+
+  it("skips API connectivity when the API key is missing", async () => {
+    const stdout: string[] = [];
+    const models = vi.fn();
+    vi.stubEnv("XAI_API_KEY", "");
+    vi.stubEnv("XAI_BASE_URL", "https://api.x.ai/v1");
+    vi.stubEnv("GROK_AGENT_KIT_MODEL", "grok-4");
+
+    try {
+      const cli = buildCli({
+        service: {
+          chat: vi.fn(),
+          xSearch: vi.fn(),
+          webSearch: vi.fn(),
+          models
+        },
+        sessionStore: {
+          get: vi.fn(),
+          list: vi.fn(),
+          set: vi.fn(),
+          delete: vi.fn()
+        },
+        stdinIsTTY: () => true,
+        readStdin: vi.fn(),
+        startMcpServer: vi.fn(),
+        writeStdout: (value) => stdout.push(value),
+        writeStdoutRaw: (value) => stdout.push(value),
+        writeStderr: vi.fn()
+      });
+
+      await cli.parseAsync([
+        "node",
+        "grok-agent-kit",
+        "doctor"
+      ]);
+    } finally {
+      vi.unstubAllEnvs();
+    }
+
+    expect(models).not.toHaveBeenCalled();
+    expect(stdout[0]).toContain("XAI API connectivity");
+    expect(stdout[0]).toContain("WARN");
   });
 });

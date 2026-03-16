@@ -19,6 +19,8 @@ export interface CliDependencies {
   service: CliService;
   sessionStore: SessionStore;
   startMcpServer: () => Promise<void>;
+  stdinIsTTY?: () => boolean;
+  readStdin?: () => Promise<string>;
   writeStdout: (value: string) => void;
   writeStdoutRaw: (value: string) => void;
   writeStderr: (value: string) => void;
