@@ -59,6 +59,7 @@ The CLI retries transient rate-limit, timeout, and `5xx` failures by default so 
 
 - `doctor` checks local environment and state-path basics before you start using chat, search, or MCP
 - current checks include Node.js version, `XAI_API_KEY`, `XAI_BASE_URL`, `XAI_MANAGEMENT_API_KEY`, `XAI_MANAGEMENT_BASE_URL`, `GROK_AGENT_KIT_MODEL`, live xAI API connectivity, live management API connectivity when configured, and local `sessions.json` readability
+- use `grok-agent-kit doctor --bundle ./doctor-bundle.json` to save a redacted diagnostic bundle for issue reports or remote debugging
 
 ## Client setup generator
 

@@ -197,6 +197,8 @@ node apps/cli/dist/bin.js mcp
 
 可先运行 `grok-agent-kit doctor` 检查本地环境，再使用 chat、search 或 MCP。
 
+如果你要提交 issue 或异步排查问题，可以加上 `--bundle ./doctor-bundle.json` 导出一份脱敏诊断快照。
+
 当前会检查：
 
 - 是否使用受支持的 Node.js 版本

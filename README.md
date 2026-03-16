@@ -198,6 +198,8 @@ Use `grok-agent-kit clients <client>` when you want a ready-to-paste install sni
 
 Use `grok-agent-kit doctor` to validate the local setup before using chat, search, or MCP.
 
+Add `--bundle ./doctor-bundle.json` when you want a redacted diagnostic snapshot for issue reports or async debugging.
+
 It currently checks:
 
 - supported Node.js version

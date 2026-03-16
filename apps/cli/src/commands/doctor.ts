@@ -1,6 +1,6 @@
-import { access, constants, readFile } from "node:fs/promises";
+import { access, constants, mkdir, readFile, writeFile } from "node:fs/promises";
 import { homedir } from "node:os";
-import { join } from "node:path";
+import { dirname, join, resolve } from "node:path";
 
 import { Command } from "commander";
 
@@ -15,20 +15,47 @@ interface DoctorCheck {
   fix?: string;
 }
 
+interface DoctorBundle {
+  generatedAt: string;
+  summary: ReturnType<typeof summarizeChecks>;
+  checks: DoctorCheck[];
+  environment: {
+    xaiApiKeyPresent: boolean;
+    xaiBaseUrl: string;
+    xaiManagementApiKeyPresent: boolean;
+    xaiManagementBaseUrl: string;
+    defaultModel: string | null;
+  };
+  runtime: {
+    nodeVersion: string;
+    platform: NodeJS.Platform;
+    arch: string;
+  };
+  localState: {
+    stateDirectory: "~/.grok-agent-kit";
+    sessionFile: "sessions.json";
+  };
+}
+
 export function createDoctorCommand(dependencies: CliDependencies): Command {
   return new Command("doctor")
     .description("Check local environment and configuration")
     .option("--json", "Print JSON output")
+    .option("--bundle <path>", "Write a redacted diagnostic bundle JSON file")
     .action(async (options) => {
       const checks = await collectDoctorChecks(dependencies);
       const summary = summarizeChecks(checks);
+      const bundlePath = options.bundle
+        ? await writeDoctorBundle(options.bundle, createDoctorBundle(checks, summary))
+        : undefined;
 
       if (options.json) {
         dependencies.writeStdout(
           JSON.stringify(
             {
               checks,
-              summary
+              summary,
+              ...(bundlePath ? { bundlePath } : {})
             },
             null,
             2
@@ -46,9 +73,53 @@ export function createDoctorCommand(dependencies: CliDependencies): Command {
       lines.push(
         `Summary: ${summary.failures} failure(s), ${summary.warnings} warning(s), ${summary.passes} passing check(s).`
       );
+      if (bundlePath) {
+        lines.push(`Saved doctor bundle to ${bundlePath}`);
+      }
 
       dependencies.writeStdout(lines.join("\n"));
     });
+}
+
+function createDoctorBundle(
+  checks: DoctorCheck[],
+  summary: ReturnType<typeof summarizeChecks>
+): DoctorBundle {
+  return {
+    generatedAt: new Date().toISOString(),
+    summary,
+    checks,
+    environment: {
+      xaiApiKeyPresent: Boolean(process.env.XAI_API_KEY?.trim()),
+      xaiBaseUrl: process.env.XAI_BASE_URL?.trim() || "https://api.x.ai/v1",
+      xaiManagementApiKeyPresent: Boolean(
+        process.env.XAI_MANAGEMENT_API_KEY?.trim()
+      ),
+      xaiManagementBaseUrl:
+        process.env.XAI_MANAGEMENT_BASE_URL?.trim() ||
+        "https://management-api.x.ai",
+      defaultModel: process.env.GROK_AGENT_KIT_MODEL?.trim() || "grok-4"
+    },
+    runtime: {
+      nodeVersion: process.version,
+      platform: process.platform,
+      arch: process.arch
+    },
+    localState: {
+      stateDirectory: "~/.grok-agent-kit",
+      sessionFile: "sessions.json"
+    }
+  };
+}
+
+async function writeDoctorBundle(
+  outputPath: string,
+  bundle: DoctorBundle
+): Promise<string> {
+  const resolvedPath = resolve(outputPath);
+  await mkdir(dirname(resolvedPath), { recursive: true });
+  await writeFile(resolvedPath, JSON.stringify(bundle, null, 2), "utf8");
+  return resolvedPath;
 }
 
 async function collectDoctorChecks(
