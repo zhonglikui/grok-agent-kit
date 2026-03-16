@@ -5,6 +5,13 @@ import type {
   WebSearchOptions,
   XSearchOptions
 } from "@grok-agent-kit/core";
+import type {
+  XaiManagementCreateApiKeyRequest,
+  XaiManagementCreateApiKeyResponse,
+  XaiManagementKeyValidationResponse,
+  XaiManagementListApiKeysRequest,
+  XaiManagementListApiKeysResponse
+} from "@grok-agent-kit/xai-client";
 
 import type { SessionStore } from "./session-store.js";
 
@@ -15,8 +22,19 @@ export interface CliService {
   models(includeRaw?: boolean): Promise<GrokModelsResult>;
 }
 
+export interface CliAuthService {
+  validateManagementKey(): Promise<XaiManagementKeyValidationResponse>;
+  listApiKeys(
+    input: XaiManagementListApiKeysRequest
+  ): Promise<XaiManagementListApiKeysResponse>;
+  createApiKey(
+    input: XaiManagementCreateApiKeyRequest
+  ): Promise<XaiManagementCreateApiKeyResponse>;
+}
+
 export interface CliDependencies {
   service: CliService;
+  authService?: CliAuthService;
   sessionStore: SessionStore;
   startMcpServer: () => Promise<void>;
   createInteractiveConsole?: () => Promise<InteractiveConsole> | InteractiveConsole;

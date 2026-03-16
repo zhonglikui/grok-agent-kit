@@ -1,4 +1,9 @@
 import type {
+  XaiManagementCreateApiKeyRequest,
+  XaiManagementCreateApiKeyResponse,
+  XaiManagementKeyValidationResponse,
+  XaiManagementListApiKeysRequest,
+  XaiManagementListApiKeysResponse,
   XaiClientOptions,
   XaiModelListResponse,
   XaiRetryOptions,
@@ -51,6 +56,7 @@ export class XaiClient implements XaiTransportLike {
 
   public readonly responses: XaiTransportLike["responses"];
   public readonly models: XaiTransportLike["models"];
+  public readonly management: XaiTransportLike["management"];
 
   public constructor(options: XaiClientOptions) {
     this.apiKey = options.apiKey;
@@ -83,6 +89,30 @@ export class XaiClient implements XaiTransportLike {
     };
     this.models = {
       list: async () => this.request<XaiModelListResponse>("GET", "/models")
+    };
+    this.management = {
+      validateKey: async () =>
+        this.request<XaiManagementKeyValidationResponse>(
+          "GET",
+          "/auth/management-keys/validation"
+        ),
+      listApiKeys: async (request) =>
+        this.request<XaiManagementListApiKeysResponse>(
+          "GET",
+          this.buildManagementApiKeysPath(request)
+        ),
+      createApiKey: async (request) =>
+        this.request<XaiManagementCreateApiKeyResponse>(
+          "POST",
+          `/auth/teams/${encodeURIComponent(request.teamId)}/api-keys`,
+          {
+            name: request.name,
+            acls: request.acls,
+            ...(request.qps !== undefined ? { qps: request.qps } : {}),
+            ...(request.qpm !== undefined ? { qpm: request.qpm } : {}),
+            ...(request.tpm !== undefined ? { tpm: request.tpm } : {})
+          }
+        )
     };
   }
 
@@ -184,6 +214,25 @@ export class XaiClient implements XaiTransportLike {
     }
 
     throw new Error("xAI API request exhausted all retry attempts");
+  }
+
+  private buildManagementApiKeysPath(
+    request: XaiManagementListApiKeysRequest
+  ): string {
+    const query = new URLSearchParams();
+
+    if (request.pageSize !== undefined) {
+      query.set("pageSize", String(request.pageSize));
+    }
+
+    if (request.paginationToken) {
+      query.set("paginationToken", request.paginationToken);
+    }
+
+    const queryString = query.toString();
+    return `/auth/teams/${encodeURIComponent(request.teamId)}/api-keys${
+      queryString.length > 0 ? `?${queryString}` : ""
+    }`;
   }
 
   private isRetryableStatus(status: number): boolean {

@@ -13,6 +13,7 @@ Community-built, unofficial CLI + MCP + skills toolkit for xAI Grok.
 ## What it ships
 
 - `grok-agent-kit chat`
+- `grok-agent-kit auth`
 - `grok-agent-kit doctor`
 - `grok-agent-kit x-search`
 - `grok-agent-kit web-search`
@@ -42,6 +43,8 @@ Set these variables before running the CLI or MCP server:
 ```bash
 XAI_API_KEY=your_key_here
 XAI_BASE_URL=https://api.x.ai/v1
+XAI_MANAGEMENT_API_KEY=your_management_key_here
+XAI_MANAGEMENT_BASE_URL=https://management-api.x.ai
 GROK_AGENT_KIT_MODEL=grok-4
 GROK_AGENT_KIT_TIMEOUT_MS=30000
 GROK_AGENT_KIT_RETRY_MAX_ATTEMPTS=3
@@ -58,6 +61,10 @@ Run directly from npm after publication:
 
 ```bash
 npx -y grok-agent-kit chat --prompt "Hello from Grok"
+npx -y grok-agent-kit auth status
+npx -y grok-agent-kit auth validate-management
+npx -y grok-agent-kit auth list-api-keys --team team_123
+npx -y grok-agent-kit auth create-api-key --team team_123 --name "Codex local key"
 npx -y grok-agent-kit doctor
 npx -y grok-agent-kit chat --prompt "Stream a quick summary" --stream
 npx -y grok-agent-kit chat --prompt-file ./context.txt
@@ -90,6 +97,10 @@ npm install
 npm test
 npm run build
 node apps/cli/dist/bin.js doctor
+node apps/cli/dist/bin.js auth status
+node apps/cli/dist/bin.js auth validate-management
+node apps/cli/dist/bin.js auth list-api-keys --team team_123
+node apps/cli/dist/bin.js auth create-api-key --team team_123 --name "Codex local key"
 node apps/cli/dist/bin.js chat --prompt "Summarize Grok search"
 node apps/cli/dist/bin.js chat --prompt "Stream a local reply" --stream
 node apps/cli/dist/bin.js chat --prompt-file ./context.txt
@@ -170,6 +181,16 @@ It currently checks:
 - `GROK_AGENT_KIT_MODEL` fallback or value
 - live xAI API connectivity through the models endpoint when local prerequisites are valid
 - local state directory and `sessions.json` readability
+
+## Auth management
+
+- Use `grok-agent-kit auth status` to see which local auth paths are configured.
+- Use `grok-agent-kit auth validate-management` to validate `XAI_MANAGEMENT_API_KEY` against the xAI management API.
+- Use `grok-agent-kit auth list-api-keys --team <teamId>` to inspect team API keys.
+- Use `grok-agent-kit auth create-api-key --team <teamId> --name <name>` to mint a team API key locally without adding any backend service.
+- `XAI_API_KEY` remains the default runtime auth for chat, search, and MCP inference traffic.
+- `XAI_MANAGEMENT_API_KEY` is optional and only used for management API operations.
+- Browser auth is not part of the current local CLI/MCP flow; use xAI API keys instead.
 
 ## Client setup docs
 

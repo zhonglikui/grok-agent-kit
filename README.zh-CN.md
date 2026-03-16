@@ -13,6 +13,7 @@
 ## 提供的能力
 
 - `grok-agent-kit chat`
+- `grok-agent-kit auth`
 - `grok-agent-kit doctor`
 - `grok-agent-kit x-search`
 - `grok-agent-kit web-search`
@@ -42,6 +43,8 @@ MCP 服务端暴露以下工具：
 ```bash
 XAI_API_KEY=your_key_here
 XAI_BASE_URL=https://api.x.ai/v1
+XAI_MANAGEMENT_API_KEY=your_management_key_here
+XAI_MANAGEMENT_BASE_URL=https://management-api.x.ai
 GROK_AGENT_KIT_MODEL=grok-4
 GROK_AGENT_KIT_TIMEOUT_MS=30000
 GROK_AGENT_KIT_RETRY_MAX_ATTEMPTS=3
@@ -57,6 +60,10 @@ GROK_AGENT_KIT_RETRY_MAX_DELAY_MS=4000
 
 ```bash
 npx -y grok-agent-kit chat --prompt "Hello from Grok"
+npx -y grok-agent-kit auth status
+npx -y grok-agent-kit auth validate-management
+npx -y grok-agent-kit auth list-api-keys --team team_123
+npx -y grok-agent-kit auth create-api-key --team team_123 --name "Codex local key"
 npx -y grok-agent-kit doctor
 npx -y grok-agent-kit chat --prompt "Stream a quick summary" --stream
 npx -y grok-agent-kit chat --prompt-file ./context.txt
@@ -89,6 +96,10 @@ npm install
 npm test
 npm run build
 node apps/cli/dist/bin.js doctor
+node apps/cli/dist/bin.js auth status
+node apps/cli/dist/bin.js auth validate-management
+node apps/cli/dist/bin.js auth list-api-keys --team team_123
+node apps/cli/dist/bin.js auth create-api-key --team team_123 --name "Codex local key"
 node apps/cli/dist/bin.js chat --prompt "Summarize Grok search"
 node apps/cli/dist/bin.js chat --prompt "Stream a local reply" --stream
 node apps/cli/dist/bin.js chat --prompt-file ./context.txt
@@ -169,6 +180,16 @@ node apps/cli/dist/bin.js mcp
 - `GROK_AGENT_KIT_MODEL` 是否为空或将回退默认值
 - 在本地前置条件有效时，通过 models endpoint 做一次真实的 xAI API 连通性检查
 - 本地状态目录与 `sessions.json` 是否可读
+
+## 认证管理
+
+- 用 `grok-agent-kit auth status` 查看当前本地已经配置了哪些认证路径。
+- 用 `grok-agent-kit auth validate-management` 校验 `XAI_MANAGEMENT_API_KEY` 是否能访问 xAI management API。
+- 用 `grok-agent-kit auth list-api-keys --team <teamId>` 查看团队下已有的 API key。
+- 用 `grok-agent-kit auth create-api-key --team <teamId> --name <name>` 在本地直接创建团队 API key，不需要额外后端服务。
+- `XAI_API_KEY` 仍然是 chat、search、MCP 推理流量的默认认证方式。
+- `XAI_MANAGEMENT_API_KEY` 是可选的，只在 management API 操作时使用。
+- 当前本地 CLI / MCP 工作流不支持浏览器授权；请直接使用 xAI API key。
 
 ## 客户端接入文档
 

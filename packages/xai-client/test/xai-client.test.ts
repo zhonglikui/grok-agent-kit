@@ -334,4 +334,160 @@ describe("XaiClient", () => {
       })
     );
   });
+
+  it("validates a management key against the management API", async () => {
+    const fetchMock = vi.fn().mockResolvedValue(
+      new Response(
+        JSON.stringify({
+          valid: true,
+          keyId: "mgmt_1",
+          teamIds: [
+            "team_1"
+          ]
+        }),
+        {
+          status: 200,
+          headers: {
+            "content-type": "application/json"
+          }
+        }
+      )
+    );
+
+    const client = new XaiClient({
+      apiKey: "management-key",
+      baseUrl: "https://management-api.x.ai",
+      fetch: fetchMock
+    });
+
+    const result = await client.management.validateKey();
+
+    expect(fetchMock).toHaveBeenCalledWith(
+      "https://management-api.x.ai/auth/management-keys/validation",
+      expect.objectContaining({
+        method: "GET",
+        headers: expect.objectContaining({
+          authorization: "Bearer management-key"
+        })
+      })
+    );
+    expect(result).toEqual(
+      expect.objectContaining({
+        valid: true,
+        teamIds: [
+          "team_1"
+        ]
+      })
+    );
+  });
+
+  it("lists team API keys from the management API", async () => {
+    const fetchMock = vi.fn().mockResolvedValue(
+      new Response(
+        JSON.stringify({
+          apiKeys: [
+            {
+              apiKeyId: "key_1",
+              name: "Codex key"
+            }
+          ],
+          nextPageToken: "next-page"
+        }),
+        {
+          status: 200,
+          headers: {
+            "content-type": "application/json"
+          }
+        }
+      )
+    );
+
+    const client = new XaiClient({
+      apiKey: "management-key",
+      baseUrl: "https://management-api.x.ai",
+      fetch: fetchMock
+    });
+
+    const result = await client.management.listApiKeys({
+      teamId: "team_1",
+      pageSize: 10,
+      paginationToken: "page_1"
+    });
+
+    expect(fetchMock).toHaveBeenCalledWith(
+      "https://management-api.x.ai/auth/teams/team_1/api-keys?pageSize=10&paginationToken=page_1",
+      expect.objectContaining({
+        method: "GET"
+      })
+    );
+    expect(result).toEqual(
+      expect.objectContaining({
+        apiKeys: [
+          expect.objectContaining({
+            apiKeyId: "key_1",
+            name: "Codex key"
+          })
+        ],
+        nextPageToken: "next-page"
+      })
+    );
+  });
+
+  it("creates a team API key through the management API", async () => {
+    const fetchMock = vi.fn().mockResolvedValue(
+      new Response(
+        JSON.stringify({
+          apiKeyId: "key_created",
+          apiKey: "xai-created-secret"
+        }),
+        {
+          status: 200,
+          headers: {
+            "content-type": "application/json"
+          }
+        }
+      )
+    );
+
+    const client = new XaiClient({
+      apiKey: "management-key",
+      baseUrl: "https://management-api.x.ai",
+      fetch: fetchMock
+    });
+
+    const result = await client.management.createApiKey({
+      teamId: "team_1",
+      name: "Codex key",
+      acls: [
+        "api-key:model:*",
+        "api-key:endpoint:*"
+      ],
+      qps: 5,
+      qpm: 100,
+      tpm: null
+    });
+
+    expect(fetchMock).toHaveBeenCalledWith(
+      "https://management-api.x.ai/auth/teams/team_1/api-keys",
+      expect.objectContaining({
+        method: "POST",
+        body: JSON.stringify({
+          name: "Codex key",
+          acls: [
+            "api-key:model:*",
+            "api-key:endpoint:*"
+          ],
+          qps: 5,
+          qpm: 100,
+          tpm: null
+        })
+      })
+    );
+    expect(result).toEqual(
+      expect.objectContaining({
+        apiKeyId: "key_created",
+        apiKey: "xai-created-secret"
+      })
+    );
+  });
 });

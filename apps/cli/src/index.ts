@@ -2,6 +2,8 @@ import { createDefaultGrokService } from "@grok-agent-kit/core";
 import { startStdioMcpServer } from "@grok-agent-kit/mcp-server";
 import { Command } from "commander";
 
+import { createDefaultCliAuthService } from "./auth-service.js";
+import { createAuthCommand } from "./commands/auth.js";
 import { createChatCommand } from "./commands/chat.js";
 import { createDoctorCommand } from "./commands/doctor.js";
 import { createMcpCommand } from "./commands/mcp.js";
@@ -20,6 +22,7 @@ export function buildCli(dependencies: CliDependencies): Command {
   program
     .name("grok-agent-kit")
     .description("CLI + MCP + skills for xAI Grok")
+    .addCommand(createAuthCommand(dependencies))
     .addCommand(createChatCommand(dependencies))
     .addCommand(createDoctorCommand(dependencies))
     .addCommand(createXSearchCommand(dependencies))
@@ -45,6 +48,7 @@ export async function runCli(argv = process.argv): Promise<void> {
       webSearch: async (input) => getService().webSearch(input),
       models: async (includeRaw) => getService().models(includeRaw)
     },
+    authService: createDefaultCliAuthService(),
     sessionStore: createFileSessionStore(),
     createInteractiveConsole: () => createReadlineInteractiveConsole(),
     replHistoryStore: createFileReplHistoryStore(),

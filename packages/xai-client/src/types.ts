@@ -88,6 +88,52 @@ export interface XaiModelListResponse {
   [key: string]: unknown;
 }
 
+export interface XaiManagementKeyValidationResponse {
+  valid: boolean;
+  keyId?: string;
+  teamIds?: string[];
+  [key: string]: unknown;
+}
+
+export interface XaiManagementApiKey {
+  apiKeyId?: string;
+  name?: string;
+  teamId?: string;
+  acls?: string[];
+  qps?: number;
+  qpm?: number;
+  tpm?: number | null;
+  createdAt?: string;
+  [key: string]: unknown;
+}
+
+export interface XaiManagementListApiKeysRequest {
+  teamId: string;
+  pageSize?: number;
+  paginationToken?: string;
+}
+
+export interface XaiManagementListApiKeysResponse {
+  apiKeys?: XaiManagementApiKey[];
+  nextPageToken?: string;
+  [key: string]: unknown;
+}
+
+export interface XaiManagementCreateApiKeyRequest {
+  teamId: string;
+  name: string;
+  acls: string[];
+  qps?: number;
+  qpm?: number;
+  tpm?: number | null;
+}
+
+export interface XaiManagementCreateApiKeyResponse {
+  apiKeyId: string;
+  apiKey?: string;
+  [key: string]: unknown;
+}
+
 export interface XaiResponseCreateOptions {
   onTextDelta?: (chunk: string) => void | Promise<void>;
 }
@@ -101,6 +147,15 @@ export interface XaiTransportLike {
   };
   models: {
     list(): Promise<XaiModelListResponse>;
+  };
+  management: {
+    validateKey(): Promise<XaiManagementKeyValidationResponse>;
+    listApiKeys(
+      request: XaiManagementListApiKeysRequest
+    ): Promise<XaiManagementListApiKeysResponse>;
+    createApiKey(
+      request: XaiManagementCreateApiKeyRequest
+    ): Promise<XaiManagementCreateApiKeyResponse>;
   };
 }
 
