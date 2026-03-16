@@ -22,6 +22,12 @@
 - 兼容的客户端可请求 MCP progress 通知，并从 `notifications/progress.params.message` 读取文本增量。
 - 不同产品和版本对 progress 通知的渲染支持程度可能不同。
 
+## 本地会话说明
+
+- `grok_chat` 支持传入 `session`，获得类似 CLI 的命名本地会话续接能力。
+- `grok_chat`、`grok_x_search`、`grok_web_search` 仍支持 `previousResponseId` 与 `store`，用于显式响应链续接。
+- `grok_list_sessions`、`grok_get_session`、`grok_delete_session` 提供基于 MCP 的本地会话管理能力。
+
 ## 示例配置
 
 - `examples/clients/codex-config.toml`

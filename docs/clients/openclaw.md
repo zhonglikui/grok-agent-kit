@@ -43,6 +43,15 @@ Add an MCP server entry that launches the built CLI:
 
 Use `skills/openclaw/SKILL.md` for OpenClaw-oriented search guidance.
 
+## Stateful MCP usage
+
+OpenClaw can use these MCP parameters and tools for local continuity:
+
+- `previousResponseId` to continue an earlier xAI response chain
+- `store: true` to keep a response chain resumable
+- `session` on `grok_chat` to auto-resume a named local session
+- `grok_list_sessions`, `grok_get_session`, and `grok_delete_session` to manage saved local sessions
+
 ## Example config
 
 You can adapt `examples/clients/openclaw-config.json` directly.

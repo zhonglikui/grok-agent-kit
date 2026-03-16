@@ -1,5 +1,5 @@
-import type { GrokService } from "@grok-agent-kit/core";
-import { createDefaultGrokService } from "@grok-agent-kit/core";
+import type { GrokService, SessionStore } from "@grok-agent-kit/core";
+import { createDefaultGrokService, createFileSessionStore } from "@grok-agent-kit/core";
 import { McpServer } from "@modelcontextprotocol/sdk/server/mcp.js";
 import { StdioServerTransport } from "@modelcontextprotocol/sdk/server/stdio.js";
 import { z } from "zod";
@@ -8,10 +8,12 @@ import { createToolHandlers } from "./tool-handlers.js";
 
 export async function startStdioMcpServer(options?: {
   service?: GrokService;
+  sessionStore?: SessionStore;
   version?: string;
 }) {
   const service = options?.service ?? createDefaultGrokService();
-  const handlers = createToolHandlers(service);
+  const sessionStore = options?.sessionStore ?? createFileSessionStore();
+  const handlers = createToolHandlers(service, sessionStore);
   const server = new McpServer({
     name: "grok-agent-kit",
     version: options?.version ?? "0.1.0"
@@ -26,6 +28,7 @@ export async function startStdioMcpServer(options?: {
         prompt: z.string(),
         system: z.string().optional(),
         model: z.string().optional(),
+        session: z.string().optional(),
         previousResponseId: z.string().optional(),
         store: z.boolean().optional(),
         stream: z.boolean().optional(),
@@ -85,6 +88,44 @@ export async function startStdioMcpServer(options?: {
       inputSchema: {}
     },
     async () => handlers.grok_models({})
+  );
+
+  server.registerTool(
+    "grok_list_sessions",
+    {
+      title: "Grok List Sessions",
+      description: "List saved local Grok sessions.",
+      inputSchema: {
+        search: z.string().optional(),
+        model: z.string().optional(),
+        limit: z.number().int().positive().optional()
+      }
+    },
+    async (args) => handlers.grok_list_sessions(args)
+  );
+
+  server.registerTool(
+    "grok_get_session",
+    {
+      title: "Grok Get Session",
+      description: "Read a saved local Grok session transcript.",
+      inputSchema: {
+        name: z.string()
+      }
+    },
+    async (args) => handlers.grok_get_session(args)
+  );
+
+  server.registerTool(
+    "grok_delete_session",
+    {
+      title: "Grok Delete Session",
+      description: "Delete a saved local Grok session.",
+      inputSchema: {
+        name: z.string()
+      }
+    },
+    async (args) => handlers.grok_delete_session(args)
   );
 
   const transport = new StdioServerTransport();

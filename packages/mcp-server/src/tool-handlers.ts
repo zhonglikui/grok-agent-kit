@@ -2,9 +2,13 @@ import type {
   ChatOptions,
   GrokModelsResult,
   GrokTextResult,
+  SessionHistoryEntry,
+  SessionRecord,
+  SessionStore,
   WebSearchOptions,
   XSearchOptions
 } from "@grok-agent-kit/core";
+import { createSessionHistoryEntry } from "@grok-agent-kit/core";
 import type { RequestHandlerExtra } from "@modelcontextprotocol/sdk/shared/protocol.js";
 import type {
   ProgressNotification,
@@ -13,6 +17,7 @@ import type {
 } from "@modelcontextprotocol/sdk/types.js";
 
 type McpChatInput = ChatOptions & {
+  session?: string;
   stream?: boolean;
 };
 
@@ -53,11 +58,50 @@ export function createToolHandlers(service: {
   xSearch: (input: XSearchOptions) => Promise<GrokTextResult>;
   webSearch: (input: WebSearchOptions) => Promise<GrokTextResult>;
   models: (includeRaw?: boolean) => Promise<GrokModelsResult>;
-}) {
+}, sessionStore: SessionStore = createNoopSessionStore()) {
   return {
     async grok_chat(input: McpChatInput, extra?: ToolHandlerExtra) {
-      return runStreamableTextTool(input, extra, (serviceInput) =>
-        service.chat(serviceInput)
+      if (input.session && input.store === false) {
+        return createErrorResult(
+          new Error("session cannot be used with store=false")
+        );
+      }
+
+      const existingSession = input.session
+        ? await sessionStore.get(input.session)
+        : undefined;
+      const { session, ...chatInput } = input;
+
+      return runStreamableTextTool(
+        {
+          ...chatInput,
+          ...(session && !chatInput.previousResponseId
+            ? { previousResponseId: existingSession?.responseId }
+            : {}),
+          ...(session ? { store: true } : {})
+        },
+        extra,
+        (serviceInput) => service.chat(serviceInput),
+        async (result) => {
+          if (!session) {
+            return;
+          }
+
+          const nextResponseId = result.responseId ?? existingSession?.responseId;
+          if (!nextResponseId) {
+            return;
+          }
+
+          const timestamp = new Date().toISOString();
+          await sessionStore.set(session, {
+            responseId: nextResponseId,
+            updatedAt: timestamp,
+            history: [
+              ...(existingSession?.history ?? []),
+              createSessionHistoryEntry(chatInput.prompt, result, timestamp)
+            ]
+          });
+        }
       );
     },
 
@@ -93,6 +137,79 @@ export function createToolHandlers(service: {
       } catch (error) {
         return createErrorResult(error);
       }
+    },
+
+    async grok_list_sessions(input: {
+      search?: string;
+      model?: string;
+      limit?: number;
+    }) {
+      try {
+        const sessions = filterSessions(await sessionStore.list(), input);
+
+        return {
+          content: [
+            {
+              type: "text" as const,
+              text: renderSessionList(sessions)
+            }
+          ],
+          structuredContent: {
+            sessions
+          }
+        };
+      } catch (error) {
+        return createErrorResult(error);
+      }
+    },
+
+    async grok_get_session(input: {
+      name: string;
+    }) {
+      try {
+        const session = await sessionStore.get(input.name);
+
+        if (!session) {
+          return createErrorResult(new Error(`Session ${input.name} not found.`));
+        }
+
+        return {
+          content: [
+            {
+              type: "text" as const,
+              text: renderSessionTranscript(session)
+            }
+          ],
+          structuredContent: {
+            session
+          }
+        };
+      } catch (error) {
+        return createErrorResult(error);
+      }
+    },
+
+    async grok_delete_session(input: {
+      name: string;
+    }) {
+      try {
+        await sessionStore.delete(input.name);
+
+        return {
+          content: [
+            {
+              type: "text" as const,
+              text: `Deleted session ${input.name}`
+            }
+          ],
+          structuredContent: {
+            deleted: true,
+            name: input.name
+          }
+        };
+      } catch (error) {
+        return createErrorResult(error);
+      }
     }
   };
 }
@@ -100,17 +217,22 @@ export function createToolHandlers(service: {
 async function runStreamableTextTool<TInput extends ChatOptions | XSearchOptions | WebSearchOptions>(
   input: TInput & { stream?: boolean },
   extra: ToolHandlerExtra | undefined,
-  loader: (input: TInput) => Promise<GrokTextResult>
+  loader: (input: TInput) => Promise<GrokTextResult>,
+  onResult?: (result: GrokTextResult) => Promise<void>
 ) {
   const { stream, ...serviceInput } = input;
   const onTextDelta = createProgressNotifier(stream, extra);
 
-  return runTextTool(() =>
-    loader({
+  return runTextTool(async () => {
+    const result = await loader({
       ...(serviceInput as TInput),
       ...(onTextDelta ? { onTextDelta } : {})
-    })
-  );
+    });
+
+    await onResult?.(result);
+
+    return result;
+  });
 }
 
 function createProgressNotifier(
@@ -186,4 +308,85 @@ function createErrorResult(error: unknown) {
       }
     }
   };
+}
+
+function createNoopSessionStore(): SessionStore {
+  return {
+    async get() {
+      return undefined;
+    },
+    async list() {
+      return [];
+    },
+    async set() {},
+    async delete() {}
+  };
+}
+
+function renderSessionList(sessions: SessionRecord[]): string {
+  if (sessions.length === 0) {
+    return "No sessions found.";
+  }
+
+  return sessions
+    .map((session) => `${session.name}\t${session.responseId}\t${session.updatedAt}`)
+    .join("\n");
+}
+
+function renderSessionTranscript(session: SessionRecord): string {
+  const transcript = session.history
+    .map((entry) => renderSessionHistoryEntry(entry))
+    .join("\n\n");
+
+  return [
+    session.name,
+    `Last response: ${session.responseId}`,
+    `Updated: ${session.updatedAt}`,
+    "",
+    transcript
+  ].join("\n");
+}
+
+function renderSessionHistoryEntry(entry: SessionHistoryEntry): string {
+  return [
+    `[${entry.createdAt}]${entry.model ? ` (${entry.model})` : ""}`,
+    `User: ${entry.prompt}`,
+    `Assistant: ${entry.responseText}`,
+    ...(entry.responseId ? [`Response ID: ${entry.responseId}`] : [])
+  ].join("\n");
+}
+
+function filterSessions(
+  sessions: SessionRecord[],
+  options: {
+    search?: string;
+    model?: string;
+    limit?: number;
+  }
+) {
+  let filteredSessions = sessions;
+
+  if (options.search) {
+    const expression = new RegExp(options.search, "i");
+    filteredSessions = filteredSessions.filter((session) =>
+      expression.test(
+        [
+          session.name,
+          ...session.history.flatMap((entry) => [entry.prompt, entry.responseText])
+        ].join("\n")
+      )
+    );
+  }
+
+  if (options.model) {
+    filteredSessions = filteredSessions.filter((session) =>
+      session.history.some((entry) => entry.model === options.model)
+    );
+  }
+
+  if (options.limit !== undefined) {
+    filteredSessions = filteredSessions.slice(0, options.limit);
+  }
+
+  return filteredSessions;
 }

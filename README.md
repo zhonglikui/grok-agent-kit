@@ -26,6 +26,9 @@ The MCP server exposes:
 - `grok_x_search`
 - `grok_web_search`
 - `grok_models`
+- `grok_list_sessions`
+- `grok_get_session`
+- `grok_delete_session`
 
 ## Requirements
 
@@ -67,9 +70,8 @@ npx -y grok-agent-kit x-search --prompt "Latest xAI posts" --stream
 npx -y grok-agent-kit web-search --prompt "Latest xAI docs" --stream
 npx -y grok-agent-kit x-search --session research --prompt "Latest xAI posts"
 npx -y grok-agent-kit web-search --session research --prompt "Latest xAI docs"
-npx -y grok-agent-kit x-search --prompt "Latest xAI posts"
-npx -y grok-agent-kit web-search --prompt "Latest xAI docs"
 npx -y grok-agent-kit sessions list
+npx -y grok-agent-kit sessions list --search "auth|login" --model grok-4 --limit 5
 npx -y grok-agent-kit models
 npx -y grok-agent-kit mcp
 ```
@@ -93,6 +95,7 @@ node apps/cli/dist/bin.js web-search --prompt "Find updated xAI docs" --stream
 node apps/cli/dist/bin.js x-search --session demo --prompt "Find recent xAI posts"
 node apps/cli/dist/bin.js web-search --session demo --prompt "Find updated xAI docs"
 node apps/cli/dist/bin.js sessions list
+node apps/cli/dist/bin.js sessions list --search "release|launch" --model grok-4 --limit 3
 node apps/cli/dist/bin.js mcp
 ```
 
@@ -106,9 +109,12 @@ node apps/cli/dist/bin.js mcp
 - Use `x-search --stream` and `web-search --stream` to stream search text incrementally.
 - Use `x-search --session <name>` and `web-search --session <name>` to continue search workflows in the same named session.
 - Use `sessions show <name>` to print the saved local transcript for that named session, including models and token totals when available.
-- Use `sessions list` and `sessions delete <name>` to manage local session metadata.
+- Use `sessions list --search <pattern> --model <model> --limit <n>` to filter larger local session archives.
+- Use `sessions delete <name>` to remove local session metadata.
 - Use `sessions export <name> --format markdown|json` to export a saved session for sharing, backup, or downstream tooling.
 - MCP clients can pass `previousResponseId` and `store` to `grok_chat`, `grok_x_search`, and `grok_web_search` when they want explicit continuity.
+- MCP clients can also use `grok_list_sessions`, `grok_get_session`, and `grok_delete_session` for local session management.
+- MCP clients can pass `session` to `grok_chat` for CLI-style named local session continuation.
 - MCP clients can pass `stream: true` to `grok_chat`, `grok_x_search`, and `grok_web_search`, then request MCP progress notifications to receive text deltas in `notifications/progress.params.message`.
 
 ## Exporting sessions

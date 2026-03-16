@@ -43,6 +43,15 @@
 
 `skills/openclaw/SKILL.md` 可作为面向 OpenClaw 的搜索指导文件。
 
+## 有状态 MCP 用法
+
+OpenClaw 可使用以下 MCP 参数与工具实现本地连续上下文：
+
+- `previousResponseId`：继续之前的 xAI 响应链
+- `store: true`：让该响应链后续还能继续续接
+- `session`：传给 `grok_chat` 后自动恢复命名本地会话
+- `grok_list_sessions`、`grok_get_session`、`grok_delete_session`：管理已保存的本地会话
+
 ## 示例配置
 
 你可以直接参考 `examples/clients/openclaw-config.json`。

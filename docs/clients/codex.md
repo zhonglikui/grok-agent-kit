@@ -38,5 +38,12 @@ When Codex needs continuity across tool calls, pass:
 
 - `previousResponseId` to continue an earlier xAI response chain
 - `store: true` when the follow-up should remain resumable
+- `session` on `grok_chat` when you want local named-session auto-resume without manually threading IDs
+
+Codex can also inspect or clean up saved local state through:
+
+- `grok_list_sessions`
+- `grok_get_session`
+- `grok_delete_session`
 
 For local terminal usage outside MCP, prefer `grok-agent-kit chat --session <name>`.

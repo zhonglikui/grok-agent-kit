@@ -20,6 +20,20 @@ claude mcp add grok-agent-kit --scope user npx -y grok-agent-kit mcp
 
 `skills/claude-code/SKILL.md` 可作为 Claude Code 风格工作流中的安装型 skill 内容。
 
+## 有状态 MCP 用法
+
+Claude Code 与其他 MCP 客户端一样，可以使用以下连续上下文参数：
+
+- `previousResponseId`：继续之前的 xAI 响应链
+- `store: true`：让这条响应链后续还可继续续接
+- `session`：传给 `grok_chat` 后，可直接恢复命名本地会话，无需手动维护 ID
+
+如需管理本地会话，可使用：
+
+- `grok_list_sessions`
+- `grok_get_session`
+- `grok_delete_session`
+
 ## 示例配置
 
 如果你更习惯用 JSON 方式管理 MCP 配置，可以从 `examples/clients/claude-code-config.json` 开始。

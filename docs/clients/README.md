@@ -22,6 +22,12 @@ Use these guides to connect `grok-agent-kit` to supported agent clients.
 - Compatible clients can request MCP progress notifications and read delta text from `notifications/progress.params.message`.
 - Client support for rendering progress notifications varies by product and version.
 
+## Local session note
+
+- `grok_chat` accepts `session` for CLI-style named local session continuation.
+- `grok_chat`, `grok_x_search`, and `grok_web_search` still accept `previousResponseId` and `store` for explicit response chaining.
+- `grok_list_sessions`, `grok_get_session`, and `grok_delete_session` provide local session management over MCP.
+
 ## Example configs
 
 - `examples/clients/codex-config.toml`

@@ -651,6 +651,146 @@ describe("CLI", () => {
     expect(sessionStore.delete).toHaveBeenCalledWith("alpha");
   });
 
+  it("filters sessions list by regex search and limit", async () => {
+    const stdout: string[] = [];
+    const sessionStore = {
+      get: vi.fn(),
+      list: vi.fn().mockResolvedValue([
+        {
+          name: "alpha",
+          responseId: "resp_alpha",
+          updatedAt: "2026-03-16T02:00:00.000Z",
+          history: [
+            {
+              prompt: "Debug auth",
+              responseText: "Investigate auth logs",
+              responseId: "resp_alpha",
+              createdAt: "2026-03-16T02:00:00.000Z",
+              citations: [],
+              model: "grok-4"
+            }
+          ]
+        },
+        {
+          name: "beta",
+          responseId: "resp_beta",
+          updatedAt: "2026-03-16T01:00:00.000Z",
+          history: [
+            {
+              prompt: "Brainstorm docs",
+              responseText: "Write docs outline",
+              responseId: "resp_beta",
+              createdAt: "2026-03-16T01:00:00.000Z",
+              citations: [],
+              model: "grok-4"
+            }
+          ]
+        }
+      ]),
+      set: vi.fn(),
+      delete: vi.fn()
+    };
+
+    const cli = buildCli({
+      service: {
+        chat: vi.fn(),
+        xSearch: vi.fn(),
+        webSearch: vi.fn(),
+        models: vi.fn()
+      },
+      sessionStore,
+      stdinIsTTY: () => true,
+      readStdin: vi.fn(),
+      startMcpServer: vi.fn(),
+      writeStdout: (value) => stdout.push(value),
+      writeStdoutRaw: (value) => stdout.push(value),
+      writeStderr: vi.fn()
+    });
+
+    await cli.parseAsync([
+      "node",
+      "grok-agent-kit",
+      "sessions",
+      "list",
+      "--search",
+      "auth",
+      "--limit",
+      "1"
+    ]);
+
+    expect(stdout[0]).toContain("alpha");
+    expect(stdout[0]).not.toContain("beta");
+  });
+
+  it("filters sessions list by model", async () => {
+    const stdout: string[] = [];
+    const sessionStore = {
+      get: vi.fn(),
+      list: vi.fn().mockResolvedValue([
+        {
+          name: "alpha",
+          responseId: "resp_alpha",
+          updatedAt: "2026-03-16T02:00:00.000Z",
+          history: [
+            {
+              prompt: "Hello",
+              responseText: "Hi",
+              responseId: "resp_alpha",
+              createdAt: "2026-03-16T02:00:00.000Z",
+              citations: [],
+              model: "grok-4"
+            }
+          ]
+        },
+        {
+          name: "beta",
+          responseId: "resp_beta",
+          updatedAt: "2026-03-16T01:00:00.000Z",
+          history: [
+            {
+              prompt: "Hello",
+              responseText: "Hi",
+              responseId: "resp_beta",
+              createdAt: "2026-03-16T01:00:00.000Z",
+              citations: [],
+              model: "grok-3-mini"
+            }
+          ]
+        }
+      ]),
+      set: vi.fn(),
+      delete: vi.fn()
+    };
+
+    const cli = buildCli({
+      service: {
+        chat: vi.fn(),
+        xSearch: vi.fn(),
+        webSearch: vi.fn(),
+        models: vi.fn()
+      },
+      sessionStore,
+      stdinIsTTY: () => true,
+      readStdin: vi.fn(),
+      startMcpServer: vi.fn(),
+      writeStdout: (value) => stdout.push(value),
+      writeStdoutRaw: (value) => stdout.push(value),
+      writeStderr: vi.fn()
+    });
+
+    await cli.parseAsync([
+      "node",
+      "grok-agent-kit",
+      "sessions",
+      "list",
+      "--model",
+      "grok-3-mini"
+    ]);
+
+    expect(stdout[0]).toContain("beta");
+    expect(stdout[0]).not.toContain("alpha");
+  });
+
   it("shows the local transcript for a saved session", async () => {
     const stdout: string[] = [];
     const sessionStore = {

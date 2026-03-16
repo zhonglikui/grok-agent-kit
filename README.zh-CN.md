@@ -26,6 +26,9 @@ MCP 服务端暴露以下工具：
 - `grok_x_search`
 - `grok_web_search`
 - `grok_models`
+- `grok_list_sessions`
+- `grok_get_session`
+- `grok_delete_session`
 
 ## 运行要求
 
@@ -66,9 +69,8 @@ npx -y grok-agent-kit x-search --prompt "Latest xAI posts" --stream
 npx -y grok-agent-kit web-search --prompt "Latest xAI docs" --stream
 npx -y grok-agent-kit x-search --session research --prompt "Latest xAI posts"
 npx -y grok-agent-kit web-search --session research --prompt "Latest xAI docs"
-npx -y grok-agent-kit x-search --prompt "Latest xAI posts"
-npx -y grok-agent-kit web-search --prompt "Latest xAI docs"
 npx -y grok-agent-kit sessions list
+npx -y grok-agent-kit sessions list --search "auth|login" --model grok-4 --limit 5
 npx -y grok-agent-kit models
 npx -y grok-agent-kit mcp
 ```
@@ -92,6 +94,7 @@ node apps/cli/dist/bin.js web-search --prompt "Find updated xAI docs" --stream
 node apps/cli/dist/bin.js x-search --session demo --prompt "Find recent xAI posts"
 node apps/cli/dist/bin.js web-search --session demo --prompt "Find updated xAI docs"
 node apps/cli/dist/bin.js sessions list
+node apps/cli/dist/bin.js sessions list --search "release|launch" --model grok-4 --limit 3
 node apps/cli/dist/bin.js mcp
 ```
 
@@ -105,9 +108,12 @@ node apps/cli/dist/bin.js mcp
 - 用 `x-search --stream` 和 `web-search --stream` 流式输出搜索文本结果。
 - 用 `x-search --session <name>` 和 `web-search --session <name>` 在同一个命名会话里继续搜索工作流。
 - 用 `sessions show <name>` 打印该命名会话的本地转录记录；如果有数据，也会显示模型和 token 汇总。
-- 用 `sessions list` 和 `sessions delete <name>` 管理本地会话元数据。
+- 用 `sessions list --search <pattern> --model <model> --limit <n>` 过滤更大的本地会话归档。
+- 用 `sessions delete <name>` 管理本地会话元数据。
 - 用 `sessions export <name> --format markdown|json` 导出保存好的会话，便于分享、备份或后续处理。
 - MCP 客户端可在 `grok_chat`、`grok_x_search`、`grok_web_search` 中传入 `previousResponseId` 和 `store` 来显式续接上下文。
+- MCP 客户端也可用 `grok_list_sessions`、`grok_get_session`、`grok_delete_session` 管理本地会话。
+- MCP 客户端可给 `grok_chat` 传入 `session`，获得类似 CLI 的命名本地会话续接能力。
 - MCP 客户端可对 `grok_chat`、`grok_x_search`、`grok_web_search` 传入 `stream: true`，并请求 MCP progress 通知，以便从 `notifications/progress.params.message` 接收文本增量。
 
 ## 导出会话

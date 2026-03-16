@@ -263,6 +263,160 @@ describe("createToolHandlers", () => {
     ]);
   });
 
+  it("lists saved local sessions via MCP", async () => {
+    const service = {
+      chat: vi.fn(),
+      xSearch: vi.fn(),
+      webSearch: vi.fn(),
+      models: vi.fn()
+    };
+    const sessionStore = {
+      get: vi.fn(),
+      list: vi.fn().mockResolvedValue([
+        {
+          name: "alpha",
+          responseId: "resp_alpha",
+          updatedAt: "2026-03-16T02:00:00.000Z",
+          history: []
+        }
+      ]),
+      set: vi.fn(),
+      delete: vi.fn()
+    };
+
+    const handlers = (createToolHandlers as any)(service, sessionStore);
+    const result = await handlers.grok_list_sessions({});
+
+    expect(sessionStore.list).toHaveBeenCalledTimes(1);
+    expect(result.structuredContent.sessions).toEqual([
+      expect.objectContaining({
+        name: "alpha"
+      })
+    ]);
+  });
+
+  it("returns a saved session transcript via MCP", async () => {
+    const service = {
+      chat: vi.fn(),
+      xSearch: vi.fn(),
+      webSearch: vi.fn(),
+      models: vi.fn()
+    };
+    const sessionStore = {
+      get: vi.fn().mockResolvedValue({
+        name: "alpha",
+        responseId: "resp_alpha",
+        updatedAt: "2026-03-16T02:00:00.000Z",
+        history: [
+          {
+            prompt: "Hello",
+            responseText: "Hi there",
+            responseId: "resp_alpha",
+            createdAt: "2026-03-16T02:00:00.000Z",
+            citations: []
+          }
+        ]
+      }),
+      list: vi.fn(),
+      set: vi.fn(),
+      delete: vi.fn()
+    };
+
+    const handlers = (createToolHandlers as any)(service, sessionStore);
+    const result = await handlers.grok_get_session({
+      name: "alpha"
+    });
+
+    expect(sessionStore.get).toHaveBeenCalledWith("alpha");
+    expect(result.structuredContent.session).toEqual(
+      expect.objectContaining({
+        name: "alpha"
+      })
+    );
+  });
+
+  it("deletes a saved session via MCP", async () => {
+    const service = {
+      chat: vi.fn(),
+      xSearch: vi.fn(),
+      webSearch: vi.fn(),
+      models: vi.fn()
+    };
+    const sessionStore = {
+      get: vi.fn(),
+      list: vi.fn(),
+      set: vi.fn(),
+      delete: vi.fn().mockResolvedValue(undefined)
+    };
+
+    const handlers = (createToolHandlers as any)(service, sessionStore);
+    const result = await handlers.grok_delete_session({
+      name: "alpha"
+    });
+
+    expect(sessionStore.delete).toHaveBeenCalledWith("alpha");
+    expect(result.content[0]?.text).toContain("Deleted session alpha");
+  });
+
+  it("continues a named MCP chat session and persists the result", async () => {
+    const service = {
+      chat: vi.fn().mockResolvedValue({
+        text: "continued reply",
+        citations: [],
+        responseId: "resp_next",
+        model: "grok-4"
+      }),
+      xSearch: vi.fn(),
+      webSearch: vi.fn(),
+      models: vi.fn()
+    };
+    const sessionStore = {
+      get: vi.fn().mockResolvedValue({
+        name: "alpha",
+        responseId: "resp_prev",
+        updatedAt: "2026-03-16T01:00:00.000Z",
+        history: [
+          {
+            prompt: "Earlier prompt",
+            responseText: "Earlier response",
+            responseId: "resp_prev",
+            createdAt: "2026-03-16T01:00:00.000Z",
+            citations: []
+          }
+        ]
+      }),
+      list: vi.fn(),
+      set: vi.fn().mockResolvedValue(undefined),
+      delete: vi.fn()
+    };
+
+    const handlers = (createToolHandlers as any)(service, sessionStore);
+    await handlers.grok_chat({
+      prompt: "Continue locally",
+      session: "alpha"
+    });
+
+    expect(service.chat).toHaveBeenCalledWith(
+      expect.objectContaining({
+        prompt: "Continue locally",
+        previousResponseId: "resp_prev",
+        store: true
+      })
+    );
+    expect(sessionStore.set).toHaveBeenCalledWith(
+      "alpha",
+      expect.objectContaining({
+        responseId: "resp_next",
+        history: expect.arrayContaining([
+          expect.objectContaining({
+            prompt: "Continue locally",
+            responseText: "continued reply"
+          })
+        ])
+      })
+    );
+  });
+
   it("wraps service failures in MCP error output", async () => {
     const service = {
       chat: vi.fn().mockRejectedValue(new Error("missing API key")),

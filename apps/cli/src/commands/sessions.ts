@@ -14,9 +14,15 @@ export function createSessionsCommand(dependencies: CliDependencies): Command {
   command
     .command("list")
     .description("List saved local chat sessions")
+    .option("--search <pattern>", "Filter by session name or transcript content using a regex")
+    .option("--model <model>", "Filter by recorded model name")
+    .option("--limit <number>", "Limit the number of listed sessions")
     .option("--json", "Print JSON output")
     .action(async (options) => {
-      const sessions = await dependencies.sessionStore.list();
+      const sessions = filterSessions(
+        await dependencies.sessionStore.list(),
+        options
+      );
 
       if (options.json) {
         dependencies.writeStdout(JSON.stringify(sessions, null, 2));
@@ -115,6 +121,60 @@ function renderSessionTranscript(session: SessionRecord): string {
 
   const transcript = session.history.map(renderHistoryEntry).join("\n\n");
   return `${header}\n\n${transcript}`;
+}
+
+function filterSessions(
+  sessions: SessionRecord[],
+  options: {
+    search?: string;
+    model?: string;
+    limit?: string;
+  }
+) {
+  let filteredSessions = sessions;
+
+  if (options.search) {
+    const expression = createSearchExpression(options.search);
+    filteredSessions = filteredSessions.filter((session) =>
+      expression.test(buildSessionSearchText(session))
+    );
+  }
+
+  if (options.model) {
+    filteredSessions = filteredSessions.filter((session) =>
+      session.history.some((entry) => entry.model === options.model)
+    );
+  }
+
+  if (options.limit !== undefined) {
+    const limit = Number(options.limit);
+
+    if (!Number.isInteger(limit) || limit < 1) {
+      throw new Error("--limit must be a positive integer");
+    }
+
+    filteredSessions = filteredSessions.slice(0, limit);
+  }
+
+  return filteredSessions;
+}
+
+function createSearchExpression(pattern: string) {
+  try {
+    return new RegExp(pattern, "i");
+  } catch {
+    throw new Error(`Invalid --search regex: ${pattern}`);
+  }
+}
+
+function buildSessionSearchText(session: SessionRecord): string {
+  return [
+    session.name,
+    ...session.history.flatMap((entry) => [
+      entry.prompt,
+      entry.responseText
+    ])
+  ].join("\n");
 }
 
 function renderSessionMarkdown(session: SessionRecord): string {
