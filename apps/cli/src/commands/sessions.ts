@@ -172,7 +172,8 @@ function buildSessionSearchText(session: SessionRecord): string {
     session.name,
     ...session.history.flatMap((entry) => [
       entry.prompt,
-      entry.responseText
+      entry.responseText,
+      ...(entry.images ?? []).flatMap((image) => [image.fileName, image.path])
     ])
   ].join("\n");
 }
@@ -224,6 +225,16 @@ function renderSessionMarkdown(session: SessionRecord): string {
     lines.push("");
     lines.push(entry.responseText);
 
+    if ((entry.images?.length ?? 0) > 0) {
+      lines.push("");
+      lines.push("### Images");
+      lines.push("");
+
+      for (const image of entry.images ?? []) {
+        lines.push(`- ${image.fileName} (${image.mediaType})`);
+      }
+    }
+
     if (entry.citations.length > 0) {
       lines.push("");
       lines.push("### Citations");
@@ -267,6 +278,10 @@ function renderHistoryEntry(entry: SessionHistoryEntry): string {
 
   if (entry.responseId) {
     lines.push(`Response ID: ${entry.responseId}`);
+  }
+
+  if ((entry.images?.length ?? 0) > 0) {
+    lines.push(`Images: ${entry.images?.map((image) => image.fileName).join(", ")}`);
   }
 
   const usageSummary = renderUsageSummary(entry);

@@ -1,4 +1,7 @@
 import type {
+  XaiInputImagePart,
+  XaiInputMessage,
+  XaiInputTextPart,
   XaiCitation,
   XaiResponse,
   XaiResponseCreateOptions,
@@ -6,13 +9,17 @@ import type {
   XaiToolDefinition
 } from "@grok-agent-kit/xai-client";
 
+import { resolveLocalImageInputs } from "./image-input.js";
 import type {
   BasePromptOptions,
   ChatOptions,
+  ChatHistoryEntry,
   GrokModelsResult,
   GrokServiceOptions,
   GrokTextResult,
   GrokTextUsage,
+  ResolvedLocalImageInput,
+  SessionImageReference,
   WebSearchOptions,
   XSearchOptions
 } from "./types.js";
@@ -53,7 +60,7 @@ export class GrokService {
       tools.push(this.buildWebSearchTool(options.webSearch));
     }
 
-    const request = this.buildResponseRequest(options, tools);
+    const request = await this.buildResponseRequest(options, tools);
     const createOptions = this.buildResponseCreateOptions(options);
     const response = createOptions
       ? await this.client.responses.create(request, createOptions)
@@ -69,7 +76,7 @@ export class GrokService {
       "Choose either allowedXHandles or excludedXHandles"
     );
 
-    const request = this.buildResponseRequest(options, [this.buildXSearchTool(options)]);
+    const request = await this.buildResponseRequest(options, [this.buildXSearchTool(options)]);
     const createOptions = this.buildResponseCreateOptions(options);
     const response = createOptions
       ? await this.client.responses.create(request, createOptions)
@@ -85,7 +92,7 @@ export class GrokService {
       "Choose either allowedWebDomains or excludedWebDomains"
     );
 
-    const request = this.buildResponseRequest(options, [this.buildWebSearchTool(options)]);
+    const request = await this.buildResponseRequest(options, [this.buildWebSearchTool(options)]);
     const createOptions = this.buildResponseCreateOptions(options);
     const response = createOptions
       ? await this.client.responses.create(request, createOptions)
@@ -103,13 +110,15 @@ export class GrokService {
     };
   }
 
-  private buildResponseRequest(
-    options: BasePromptOptions,
+  private async buildResponseRequest(
+    options: BasePromptOptions | ChatOptions,
     tools: XaiToolDefinition[]
-  ): XaiResponseCreateRequest {
+  ): Promise<XaiResponseCreateRequest> {
+    const usesImageReplay = this.usesImageReplay(options);
+
     return {
       model: options.model ?? this.defaultModel,
-      input: this.buildInput(options.prompt, options.system),
+      input: await this.buildInput(options),
       ...(options.include ? { include: options.include } : {}),
       ...(options.maxOutputTokens !== undefined
         ? { max_output_tokens: options.maxOutputTokens }
@@ -117,10 +126,14 @@ export class GrokService {
       ...(options.temperature !== undefined
         ? { temperature: options.temperature }
         : {}),
-      ...(options.previousResponseId
+      ...(options.previousResponseId && !usesImageReplay
         ? { previous_response_id: options.previousResponseId }
         : {}),
-      ...(options.store !== undefined ? { store: options.store } : {}),
+      ...(usesImageReplay
+        ? { store: false }
+        : options.store !== undefined
+          ? { store: options.store }
+          : {}),
       ...(options.onTextDelta ? { stream: true } : {}),
       ...(tools.length > 0 ? { tools } : {}),
       ...(options.responseOverrides ?? {})
@@ -137,32 +150,84 @@ export class GrokService {
       : undefined;
   }
 
-  private buildInput(prompt: string, system?: string) {
-    const messages = [];
+  private async buildInput(
+    options: BasePromptOptions | ChatOptions
+  ): Promise<XaiInputMessage[]> {
+    const messages: XaiInputMessage[] = [];
 
-    if (system) {
+    if (options.system) {
       messages.push({
         role: "system" as const,
         content: [
-          {
-            type: "input_text",
-            text: system
-          }
+          this.createTextPart(options.system)
         ]
       });
     }
 
+    if (this.hasReplayHistory(options)) {
+      for (const entry of options.history ?? []) {
+        messages.push(
+          await this.createUserMessage(entry.prompt, entry.images)
+        );
+        messages.push({
+          role: "assistant" as const,
+          content: [
+            this.createTextPart(entry.responseText)
+          ]
+        });
+      }
+    }
+
+    const currentImages = this.isChatOptions(options) ? options.images : undefined;
     messages.push({
       role: "user" as const,
-      content: [
-        {
-          type: "input_text",
-          text: prompt
-        }
-      ]
+      content: await this.createUserContent(options.prompt, currentImages)
     });
 
     return messages;
+  }
+
+  private async createUserMessage(
+    prompt: string,
+    images?: SessionImageReference[] | ResolvedLocalImageInput[]
+  ): Promise<XaiInputMessage> {
+    return {
+      role: "user",
+      content: await this.createUserContent(prompt, images)
+    };
+  }
+
+  private async createUserContent(
+    prompt: string,
+    images?: SessionImageReference[] | ResolvedLocalImageInput[]
+  ): Promise<Array<XaiInputTextPart | XaiInputImagePart>> {
+    const content: Array<XaiInputTextPart | XaiInputImagePart> = [
+      this.createTextPart(prompt)
+    ];
+
+    if ((images?.length ?? 0) > 0) {
+      const resolvedImages = await resolveLocalImageInputs(
+        images as Array<SessionImageReference | ResolvedLocalImageInput>
+      );
+      content.push(...resolvedImages.map((image) => this.createImagePart(image)));
+    }
+
+    return content;
+  }
+
+  private createTextPart(text: string): XaiInputTextPart {
+    return {
+      type: "input_text",
+      text
+    };
+  }
+
+  private createImagePart(image: ResolvedLocalImageInput): XaiInputImagePart {
+    return {
+      type: "input_image",
+      image_url: image.dataUrl,
+      ...(image.detail ? { detail: image.detail } : {})
+    };
   }
 
   private buildXSearchTool(
@@ -295,5 +360,33 @@ export class GrokService {
     };
 
     return Object.keys(normalizedUsage).length > 0 ? normalizedUsage : undefined;
+  }
+
+  private isChatOptions(
+    options: BasePromptOptions | ChatOptions
+  ): options is ChatOptions {
+    return (
+      "images" in options ||
+      "history" in options ||
+      "xSearch" in options ||
+      "webSearch" in options
+    );
+  }
+
+  private hasReplayHistory(
+    options: BasePromptOptions | ChatOptions
+  ): options is ChatOptions & { history: ChatHistoryEntry[] } {
+    return this.isChatOptions(options) && (options.history?.length ?? 0) > 0;
+  }
+
+  private usesImageReplay(options: BasePromptOptions | ChatOptions): boolean {
+    if (!this.isChatOptions(options)) {
+      return false;
+    }
+
+    return (
+      (options.images?.length ?? 0) > 0 ||
+      (options.history?.some((entry) => (entry.images?.length ?? 0) > 0) ?? false)
+    );
   }
 }

@@ -50,7 +50,10 @@ OpenClaw can use these MCP parameters and tools for local continuity:
 - `previousResponseId` to continue an earlier xAI response chain
 - `store: true` to keep a response chain resumable
 - `session` on `grok_chat` to auto-resume a named local session
+- `images` on `grok_chat` to attach local screenshots or photos
 - `grok_list_sessions`, `grok_get_session`, and `grok_delete_session` to manage saved local sessions
+
+If a named session includes image turns, rely on the local `session` replay flow rather than `previousResponseId`.
 
 ## Example config
 

@@ -2,7 +2,11 @@ import { mkdir, readFile, writeFile } from "node:fs/promises";
 import { homedir } from "node:os";
 import { dirname, join } from "node:path";
 
-import type { GrokTextResult, GrokTextUsage } from "./types.js";
+import type {
+  GrokTextResult,
+  GrokTextUsage,
+  SessionImageReference
+} from "./types.js";
 
 export interface SessionRecord {
   name: string;
@@ -24,6 +28,7 @@ export interface SessionHistoryEntry {
   model?: string;
   citations: SessionCitation[];
   usage?: GrokTextUsage;
+  images?: SessionImageReference[];
 }
 
 export interface SessionStore {
@@ -92,7 +97,8 @@ export function createFileSessionStore(options?: {
 export function createSessionHistoryEntry(
   prompt: string,
   result: GrokTextResult,
-  createdAt: string
+  createdAt: string,
+  images?: SessionImageReference[]
 ): SessionHistoryEntry {
   return {
     prompt,
@@ -101,7 +107,8 @@ export function createSessionHistoryEntry(
     createdAt,
     ...(result.model ? { model: result.model } : {}),
     citations: result.citations,
-    ...(result.usage ? { usage: result.usage } : {})
+    ...(result.usage ? { usage: result.usage } : {}),
+    ...(images && images.length > 0 ? { images } : {})
   };
 }
 
@@ -142,7 +149,8 @@ function toSessionRecord(
     updatedAt: record.updatedAt,
     history: (record.history ?? []).map((entry) => ({
       ...entry,
-      citations: entry.citations ?? []
+      citations: entry.citations ?? [],
+      ...(entry.images ? { images: entry.images } : {})
     }))
   };
 }

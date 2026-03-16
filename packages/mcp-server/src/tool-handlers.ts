@@ -8,7 +8,11 @@ import type {
   WebSearchOptions,
   XSearchOptions
 } from "@grok-agent-kit/core";
-import { createSessionHistoryEntry } from "@grok-agent-kit/core";
+import {
+  createSessionHistoryEntry,
+  resolveLocalImageInputs,
+  toSessionImageReferences
+} from "@grok-agent-kit/core";
 import type { RequestHandlerExtra } from "@modelcontextprotocol/sdk/shared/protocol.js";
 import type {
   ProgressNotification,
@@ -16,7 +20,8 @@ import type {
   ServerRequest
 } from "@modelcontextprotocol/sdk/types.js";
 
-type McpChatInput = ChatOptions & {
+type McpChatInput = Omit<ChatOptions, "images"> & {
+  images?: string[];
   session?: string;
   stream?: boolean;
 };
@@ -61,24 +66,44 @@ export function createToolHandlers(service: {
 }, sessionStore: SessionStore = createNoopSessionStore()) {
   return {
     async grok_chat(input: McpChatInput, extra?: ToolHandlerExtra) {
-      if (input.session && input.store === false) {
+      const existingSession = input.session
+        ? await sessionStore.get(input.session)
+        : undefined;
+      const resolvedImages = await resolveLocalImageInputs(input.images ?? []);
+      const shouldReplayLocally =
+        resolvedImages.length > 0 || hasImageHistory(existingSession);
+
+      if (input.session && input.store === false && !shouldReplayLocally) {
         return createErrorResult(
           new Error("session cannot be used with store=false")
         );
       }
 
-      const existingSession = input.session
-        ? await sessionStore.get(input.session)
-        : undefined;
-      const { session, ...chatInput } = input;
+      if (input.previousResponseId && shouldReplayLocally) {
+        return createErrorResult(
+          new Error(
+            "previousResponseId cannot be used with image-backed chats; use session replay instead"
+          )
+        );
+      }
+
+      const { session, images: _images, ...chatInput } = input;
 
       return runStreamableTextTool(
         {
           ...chatInput,
-          ...(session && !chatInput.previousResponseId
+          ...(resolvedImages.length > 0 ? { images: resolvedImages } : {}),
+          ...(shouldReplayLocally && existingSession?.history
+            ? { history: existingSession.history }
+            : {}),
+          ...(session && !shouldReplayLocally && !chatInput.previousResponseId
             ? { previousResponseId: existingSession?.responseId }
             : {}),
-          ...(session ? { store: true } : {})
+          ...(shouldReplayLocally
+            ? { store: false }
+            : session
+              ? { store: true }
+              : {})
         },
         extra,
         (serviceInput) => service.chat(serviceInput),
@@ -98,7 +123,12 @@ export function createToolHandlers(service: {
             updatedAt: timestamp,
             history: [
               ...(existingSession?.history ?? []),
-              createSessionHistoryEntry(chatInput.prompt, result, timestamp)
+              createSessionHistoryEntry(
+                chatInput.prompt,
+                result,
+                timestamp,
+                toSessionImageReferences(resolvedImages)
+              )
             ]
           });
         }
@@ -389,4 +419,8 @@ function filterSessions(
   }
 
   return filteredSessions;
+}
+
+function hasImageHistory(session: SessionRecord | undefined): boolean {
+  return session?.history.some((entry) => (entry.images?.length ?? 0) > 0) ?? false;
 }

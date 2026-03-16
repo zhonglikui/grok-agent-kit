@@ -28,6 +28,7 @@ export async function startStdioMcpServer(options?: {
         prompt: z.string(),
         system: z.string().optional(),
         model: z.string().optional(),
+        images: z.array(z.string()).optional(),
         session: z.string().optional(),
         previousResponseId: z.string().optional(),
         store: z.boolean().optional(),

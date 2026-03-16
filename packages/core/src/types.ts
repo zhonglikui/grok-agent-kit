@@ -19,6 +19,31 @@ export interface BasePromptOptions {
   responseOverrides?: Record<string, unknown>;
 }
 
+export type SupportedImageMediaType = "image/jpeg" | "image/png";
+export type ImageInputDetail = "low" | "high" | "auto";
+
+export interface LocalImageInput {
+  path: string;
+  detail?: ImageInputDetail;
+}
+
+export interface ResolvedLocalImageInput extends LocalImageInput {
+  fileName: string;
+  mediaType: SupportedImageMediaType;
+  dataUrl: string;
+}
+
+export interface SessionImageReference extends LocalImageInput {
+  fileName: string;
+  mediaType: SupportedImageMediaType;
+}
+
+export interface ChatHistoryEntry {
+  prompt: string;
+  responseText: string;
+  images?: SessionImageReference[];
+}
+
 export interface XSearchOptions extends BasePromptOptions {
   allowedXHandles?: string[];
   excludedXHandles?: string[];
@@ -32,6 +57,8 @@ export interface WebSearchOptions extends BasePromptOptions {
 }
 
 export interface ChatOptions extends BasePromptOptions {
+  images?: ResolvedLocalImageInput[];
+  history?: ChatHistoryEntry[];
   xSearch?: Pick<XSearchOptions, "allowedXHandles" | "excludedXHandles" | "toolOverrides">;
   webSearch?: Pick<
     WebSearchOptions,

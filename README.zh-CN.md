@@ -60,9 +60,12 @@ npx -y grok-agent-kit chat --prompt "Hello from Grok"
 npx -y grok-agent-kit doctor
 npx -y grok-agent-kit chat --prompt "Stream a quick summary" --stream
 npx -y grok-agent-kit chat --prompt-file ./context.txt
+npx -y grok-agent-kit chat --prompt "Describe this screenshot" --image ./screen.png
 npx -y grok-agent-kit chat --prompt "Analyze these logs:" < ./logs.txt
 npx -y grok-agent-kit chat --session research --prompt "Summarize the latest Grok updates"
 npx -y grok-agent-kit chat --session research --prompt "Turn that into a release note draft"
+npx -y grok-agent-kit chat --session vision --prompt "Describe this screenshot" --image ./screen.png
+npx -y grok-agent-kit chat --session vision --prompt "What changed after that?"
 npx -y grok-agent-kit sessions show research
 npx -y grok-agent-kit sessions export research --format markdown
 npx -y grok-agent-kit x-search --prompt "Latest xAI posts" --stream
@@ -85,8 +88,11 @@ node apps/cli/dist/bin.js doctor
 node apps/cli/dist/bin.js chat --prompt "Summarize Grok search"
 node apps/cli/dist/bin.js chat --prompt "Stream a local reply" --stream
 node apps/cli/dist/bin.js chat --prompt-file ./context.txt
+node apps/cli/dist/bin.js chat --prompt "Describe this screenshot" --image ./screen.png
 Get-Content ./logs.txt | node apps/cli/dist/bin.js chat --prompt "Analyze these logs:"
 node apps/cli/dist/bin.js chat --session demo --prompt "Start a local-first conversation"
+node apps/cli/dist/bin.js chat --session vision --prompt "Describe this screenshot" --image ./screen.png
+node apps/cli/dist/bin.js chat --session vision --prompt "What changed after that?"
 node apps/cli/dist/bin.js sessions show demo
 node apps/cli/dist/bin.js sessions export demo --format markdown --output ./demo-session.md
 node apps/cli/dist/bin.js x-search --prompt "Find recent xAI posts" --stream
@@ -104,6 +110,7 @@ node apps/cli/dist/bin.js mcp
 
 - 用 `chat --session <name>` 在多次调用之间继续同一个本地命名会话。
 - 用 `chat --reset-session --session <name>` 重置并重新开始该命名会话。
+- 用 `chat --image <path>` 一次或多次附加本地 PNG 或 JPEG 图片。
 - 用 `chat --stream` 在 xAI 逐步返回内容时直接输出文本增量。
 - 用 `x-search --stream` 和 `web-search --stream` 流式输出搜索文本结果。
 - 用 `x-search --session <name>` 和 `web-search --session <name>` 在同一个命名会话里继续搜索工作流。
@@ -112,8 +119,10 @@ node apps/cli/dist/bin.js mcp
 - 用 `sessions delete <name>` 管理本地会话元数据。
 - 用 `sessions export <name> --format markdown|json` 导出保存好的会话，便于分享、备份或后续处理。
 - MCP 客户端可在 `grok_chat`、`grok_x_search`、`grok_web_search` 中传入 `previousResponseId` 和 `store` 来显式续接上下文。
+- MCP 客户端可向 `grok_chat` 传入 `images: ["/absolute/path/to/screenshot.png"]` 来做本地多模态分析。
 - MCP 客户端也可用 `grok_list_sessions`、`grok_get_session`、`grok_delete_session` 管理本地会话。
 - MCP 客户端可给 `grok_chat` 传入 `session`，获得类似 CLI 的命名本地会话续接能力。
+- 带图片的命名会话会从本地会话归档重放上下文，并以 `store: false` 运行，而不是依赖服务端历史。
 - MCP 客户端可对 `grok_chat`、`grok_x_search`、`grok_web_search` 传入 `stream: true`，并请求 MCP progress 通知，以便从 `notifications/progress.params.message` 接收文本增量。
 
 ## 导出会话
@@ -125,6 +134,7 @@ node apps/cli/dist/bin.js mcp
 ## 管道与文件输入
 
 - `chat`、`x-search`、`web-search` 都支持 `--prompt-file <path>`，可直接读取 UTF-8 文本文件作为 prompt。
+- `chat` 支持 `--image <path>`，可在文本 prompt 之外附加本地 PNG 或 JPEG 图片。
 - `chat --system-file <path>` 可从文件读取较长的 system prompt，便于复用。
 - 如果命令接收到管道 stdin，会把管道内容追加到 `--prompt` 或 `--prompt-file` 之后，并用一个空行分隔。
 - 也可以只使用管道 stdin，不传 `--prompt`，直接把完整 prompt 内容通过管道送入。

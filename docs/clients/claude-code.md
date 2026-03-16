@@ -27,12 +27,15 @@ Claude Code can use the same continuity controls as other MCP clients:
 - `previousResponseId` to continue an earlier xAI response chain
 - `store: true` to keep a response chain resumable
 - `session` on `grok_chat` to resume a named local session without manual ID tracking
+- `images` on `grok_chat` to attach local screenshots or photos
 
 For local session administration, use:
 
 - `grok_list_sessions`
 - `grok_get_session`
 - `grok_delete_session`
+
+When a named session contains image turns, Claude Code should rely on `session` replay instead of manually threading `previousResponseId`.
 
 ## Example config
 

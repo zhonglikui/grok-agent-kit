@@ -1,6 +1,18 @@
-import { describe, expect, it, vi } from "vitest";
+import { mkdtempSync, rmSync, writeFileSync } from "node:fs";
+import { tmpdir } from "node:os";
+import { join } from "node:path";
 
-import { GrokService } from "../src/index.js";
+import { afterEach, describe, expect, it, vi } from "vitest";
+
+import { GrokService, resolveLocalImageInputs } from "../src/index.js";
+
+const tempDirectories: string[] = [];
+
+afterEach(() => {
+  for (const directory of tempDirectories.splice(0)) {
+    rmSync(directory, { recursive: true, force: true });
+  }
+});
 
 describe("GrokService", () => {
   it("builds a plain chat request without search tools", async () => {
@@ -107,6 +119,148 @@ describe("GrokService", () => {
       }
     );
     expect(result.text).toBe("Hello world");
+  });
+
+  it("builds a chat request with local image content parts", async () => {
+    const directory = mkdtempSync(join(tmpdir(), "grok-agent-kit-service-image-"));
+    tempDirectories.push(directory);
+    const imagePath = join(directory, "screen.png");
+    writeFileSync(imagePath, Buffer.from("png-binary"), "utf8");
+    const images = await resolveLocalImageInputs([
+      imagePath
+    ]);
+    const client = {
+      responses: {
+        create: vi.fn().mockResolvedValue({
+          id: "resp_vision",
+          model: "grok-4",
+          output_text: "vision reply",
+          citations: []
+        })
+      },
+      models: {
+        list: vi.fn()
+      }
+    };
+
+    const service = new GrokService({
+      client,
+      defaultModel: "grok-4"
+    });
+
+    const result = await service.chat({
+      prompt: "Describe this image",
+      images
+    });
+
+    expect(client.responses.create).toHaveBeenCalledWith(
+      expect.objectContaining({
+        input: [
+          {
+            role: "user",
+            content: [
+              {
+                type: "input_text",
+                text: "Describe this image"
+              },
+              expect.objectContaining({
+                type: "input_image",
+                image_url: expect.stringContaining("data:image/png;base64,")
+              })
+            ]
+          }
+        ],
+        store: false
+      })
+    );
+    expect(result.text).toBe("vision reply");
+  });
+
+  it("replays local image-backed session history instead of using previous response ids", async () => {
+    const directory = mkdtempSync(join(tmpdir(), "grok-agent-kit-service-image-history-"));
+    tempDirectories.push(directory);
+    const imagePath = join(directory, "screen.png");
+    writeFileSync(imagePath, Buffer.from("png-binary"), "utf8");
+    const client = {
+      responses: {
+        create: vi.fn().mockResolvedValue({
+          id: "resp_replay",
+          model: "grok-4",
+          output_text: "replayed reply",
+          citations: []
+        })
+      },
+      models: {
+        list: vi.fn()
+      }
+    };
+
+    const service = new GrokService({
+      client,
+      defaultModel: "grok-4"
+    });
+
+    await service.chat({
+      prompt: "What changed after that?",
+      history: [
+        {
+          prompt: "Describe the screenshot",
+          responseText: "It shows a settings page.",
+          images: [
+            {
+              path: imagePath,
+              fileName: "screen.png",
+              mediaType: "image/png"
+            }
+          ]
+        }
+      ],
+      previousResponseId: "resp_prev"
+    });
+
+    expect(client.responses.create).toHaveBeenCalledWith(
+      expect.objectContaining({
+        input: [
+          {
+            role: "user",
+            content: [
+              {
+                type: "input_text",
+                text: "Describe the screenshot"
+              },
+              expect.objectContaining({
+                type: "input_image",
+                image_url: expect.stringContaining("data:image/png;base64,")
+              })
+            ]
+          },
+          {
+            role: "assistant",
+            content: [
+              {
+                type: "input_text",
+                text: "It shows a settings page."
+              }
+            ]
+          },
+          {
+            role: "user",
+            content: [
+              {
+                type: "input_text",
+                text: "What changed after that?"
+              }
+            ]
+          }
+        ],
+        store: false
+      })
+    );
+    expect(client.responses.create).not.toHaveBeenCalledWith(
+      expect.objectContaining({
+        previous_response_id: "resp_prev"
+      })
+    );
   });
 
   it("builds an X Search tool payload with handle filters", async () => {

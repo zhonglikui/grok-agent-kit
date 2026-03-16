@@ -61,9 +61,12 @@ npx -y grok-agent-kit chat --prompt "Hello from Grok"
 npx -y grok-agent-kit doctor
 npx -y grok-agent-kit chat --prompt "Stream a quick summary" --stream
 npx -y grok-agent-kit chat --prompt-file ./context.txt
+npx -y grok-agent-kit chat --prompt "Describe this screenshot" --image ./screen.png
 npx -y grok-agent-kit chat --prompt "Analyze these logs:" < ./logs.txt
 npx -y grok-agent-kit chat --session research --prompt "Summarize the latest Grok updates"
 npx -y grok-agent-kit chat --session research --prompt "Turn that into a release note draft"
+npx -y grok-agent-kit chat --session vision --prompt "Describe this screenshot" --image ./screen.png
+npx -y grok-agent-kit chat --session vision --prompt "What changed after that?"
 npx -y grok-agent-kit sessions show research
 npx -y grok-agent-kit sessions export research --format markdown
 npx -y grok-agent-kit x-search --prompt "Latest xAI posts" --stream
@@ -86,8 +89,11 @@ node apps/cli/dist/bin.js doctor
 node apps/cli/dist/bin.js chat --prompt "Summarize Grok search"
 node apps/cli/dist/bin.js chat --prompt "Stream a local reply" --stream
 node apps/cli/dist/bin.js chat --prompt-file ./context.txt
+node apps/cli/dist/bin.js chat --prompt "Describe this screenshot" --image ./screen.png
 Get-Content ./logs.txt | node apps/cli/dist/bin.js chat --prompt "Analyze these logs:"
 node apps/cli/dist/bin.js chat --session demo --prompt "Start a local-first conversation"
+node apps/cli/dist/bin.js chat --session vision --prompt "Describe this screenshot" --image ./screen.png
+node apps/cli/dist/bin.js chat --session vision --prompt "What changed after that?"
 node apps/cli/dist/bin.js sessions show demo
 node apps/cli/dist/bin.js sessions export demo --format markdown --output ./demo-session.md
 node apps/cli/dist/bin.js x-search --prompt "Find recent xAI posts" --stream
@@ -105,6 +111,7 @@ node apps/cli/dist/bin.js mcp
 
 - Use `chat --session <name>` to continue a named local session across invocations.
 - Use `chat --reset-session --session <name>` to start that named session over.
+- Use `chat --image <path>` one or more times to attach local PNG or JPEG files.
 - Use `chat --stream` to print chat text incrementally as xAI sends deltas.
 - Use `x-search --stream` and `web-search --stream` to stream search text incrementally.
 - Use `x-search --session <name>` and `web-search --session <name>` to continue search workflows in the same named session.
@@ -113,8 +120,10 @@ node apps/cli/dist/bin.js mcp
 - Use `sessions delete <name>` to remove local session metadata.
 - Use `sessions export <name> --format markdown|json` to export a saved session for sharing, backup, or downstream tooling.
 - MCP clients can pass `previousResponseId` and `store` to `grok_chat`, `grok_x_search`, and `grok_web_search` when they want explicit continuity.
+- MCP clients can pass `images: ["/absolute/path/to/screenshot.png"]` to `grok_chat` for local multimodal analysis.
 - MCP clients can also use `grok_list_sessions`, `grok_get_session`, and `grok_delete_session` for local session management.
 - MCP clients can pass `session` to `grok_chat` for CLI-style named local session continuation.
+- Image-backed named sessions replay from the local session archive with `store: false` instead of depending on server-side response history.
 - MCP clients can pass `stream: true` to `grok_chat`, `grok_x_search`, and `grok_web_search`, then request MCP progress notifications to receive text deltas in `notifications/progress.params.message`.
 
 ## Exporting sessions
@@ -126,6 +135,7 @@ node apps/cli/dist/bin.js mcp
 ## Piping and file workflows
 
 - Use `--prompt-file <path>` with `chat`, `x-search`, and `web-search` to load a prompt from a UTF-8 text file.
+- Use `--image <path>` with `chat` to attach local PNG or JPEG files alongside the text prompt.
 - Use `--system-file <path>` with `chat` for reusable long-form system prompts.
 - Pipe stdin into any prompt command; piped content is appended after `--prompt` / `--prompt-file` with a blank line separator.
 - Stdin-only usage also works when you omit `--prompt` entirely and pipe the full prompt content in.

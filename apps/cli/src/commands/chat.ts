@@ -1,3 +1,4 @@
+import { resolveLocalImageInputs, toSessionImageReferences } from "@grok-agent-kit/core";
 import { Command } from "commander";
 
 import { renderStreamResult, renderTextResult } from "../output.js";
@@ -10,6 +11,12 @@ export function createChatCommand(dependencies: CliDependencies): Command {
     .description("Send a plain chat prompt to xAI Grok")
     .option("--prompt <prompt>", "Prompt text")
     .option("-f, --prompt-file <path>", "Read prompt text from a file")
+    .option(
+      "--image <path>",
+      "Attach a local PNG or JPEG image",
+      collectImagePath,
+      []
+    )
     .option("--system <system>", "System prompt")
     .option("--system-file <path>", "Read system prompt from a file")
     .option("--model <model>", "Override model")
@@ -23,10 +30,6 @@ export function createChatCommand(dependencies: CliDependencies): Command {
     .option("--stream", "Stream text output as it arrives")
     .option("--json", "Print JSON output")
     .action(async (options) => {
-      if (options.session && options.store === false) {
-        throw new Error("--session cannot be used with --no-store");
-      }
-
       if (options.stream && options.json) {
         throw new Error("--stream cannot be used with --json");
       }
@@ -55,15 +58,29 @@ export function createChatCommand(dependencies: CliDependencies): Command {
         fileFlag: "--system-file",
         label: "system prompt"
       });
+      const resolvedImages = await resolveLocalImageInputs(options.image ?? []);
 
       let existingSession = undefined;
       let previousResponseId = options.previousResponseId as string | undefined;
 
-      if (!previousResponseId && options.session) {
+      if (options.session) {
         existingSession = await dependencies.sessionStore.get(options.session);
+      }
+      const shouldReplayLocally =
+        resolvedImages.length > 0 || hasImageHistory(existingSession?.history);
+
+      if (options.session && options.store === false && !shouldReplayLocally) {
+        throw new Error("--session cannot be used with --no-store");
+      }
+
+      if (options.previousResponseId && shouldReplayLocally) {
+        throw new Error(
+          "--previous-response-id cannot be used with image-backed chats; use --session instead"
+        );
+      }
+
+      if (!previousResponseId && options.session && !shouldReplayLocally) {
         previousResponseId = existingSession?.responseId;
-      } else if (options.session) {
-        existingSession = await dependencies.sessionStore.get(options.session);
       }
 
       let streamedText = "";
@@ -71,8 +88,12 @@ export function createChatCommand(dependencies: CliDependencies): Command {
         prompt,
         system,
         model: options.model,
-        previousResponseId,
-        store: options.session ? true : options.store,
+        ...(resolvedImages.length > 0 ? { images: resolvedImages } : {}),
+        ...(shouldReplayLocally && existingSession?.history
+          ? { history: existingSession.history }
+          : {}),
+        previousResponseId: shouldReplayLocally ? undefined : previousResponseId,
+        store: shouldReplayLocally ? false : options.session ? true : options.store,
         ...(options.stream
           ? {
               onTextDelta: async (chunk: string) => {
@@ -92,7 +113,12 @@ export function createChatCommand(dependencies: CliDependencies): Command {
           updatedAt: timestamp,
           history: [
             ...(existingSession?.history ?? []),
-            createSessionHistoryEntry(prompt, result, timestamp)
+            createSessionHistoryEntry(
+              prompt,
+              result,
+              timestamp,
+              toSessionImageReferences(resolvedImages)
+            )
           ]
         });
       }
@@ -109,4 +135,17 @@ export function createChatCommand(dependencies: CliDependencies): Command {
 
       renderTextResult(result, Boolean(options.json), dependencies.writeStdout);
     });
+}
+
+function collectImagePath(value: string, previous: string[]): string[] {
+  return [
+    ...previous,
+    value
+  ];
+}
+
+function hasImageHistory(
+  history: Array<{ images?: unknown[] }> | undefined
+): boolean {
+  return history?.some((entry) => (entry.images?.length ?? 0) > 0) ?? false;
 }

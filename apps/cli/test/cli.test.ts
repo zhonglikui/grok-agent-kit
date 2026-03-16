@@ -60,6 +60,85 @@ describe("CLI", () => {
     expect(stdout[0]).toContain("chat output");
   });
 
+  it("passes resolved local image input to chat and stores lightweight metadata", async () => {
+    const directory = mkdtempSync(join(tmpdir(), "grok-agent-kit-cli-image-"));
+    tempDirectories.push(directory);
+    const imagePath = join(directory, "screen.png");
+    writeFileSync(imagePath, Buffer.from("png-binary"), "utf8");
+
+    const service = {
+      chat: vi.fn().mockResolvedValue({
+        text: "vision output",
+        citations: [],
+        responseId: "resp_vision"
+      }),
+      xSearch: vi.fn(),
+      webSearch: vi.fn(),
+      models: vi.fn()
+    };
+    const sessionStore = {
+      get: vi.fn().mockResolvedValue(undefined),
+      list: vi.fn(),
+      set: vi.fn().mockResolvedValue(undefined),
+      delete: vi.fn()
+    };
+
+    const cli = buildCli({
+      service,
+      sessionStore,
+      stdinIsTTY: () => true,
+      readStdin: vi.fn(),
+      startMcpServer: vi.fn(),
+      writeStdout: vi.fn(),
+      writeStdoutRaw: vi.fn(),
+      writeStderr: vi.fn()
+    });
+
+    await cli.parseAsync([
+      "node",
+      "grok-agent-kit",
+      "chat",
+      "--prompt",
+      "Describe the screenshot",
+      "--image",
+      imagePath,
+      "--session",
+      "vision"
+    ]);
+
+    expect(service.chat).toHaveBeenCalledWith(
+      expect.objectContaining({
+        prompt: "Describe the screenshot",
+        images: [
+          expect.objectContaining({
+            path: imagePath,
+            fileName: "screen.png",
+            mediaType: "image/png",
+            dataUrl: expect.stringContaining("data:image/png;base64,")
+          })
+        ],
+        store: false
+      })
+    );
+    expect(sessionStore.set).toHaveBeenCalledWith(
+      "vision",
+      expect.objectContaining({
+        history: expect.arrayContaining([
+          expect.objectContaining({
+            prompt: "Describe the screenshot",
+            images: [
+              {
+                path: imagePath,
+                fileName: "screen.png",
+                mediaType: "image/png"
+              }
+            ]
+          })
+        ])
+      })
+    );
+  });
+
   it("reports a missing XAI_API_KEY in doctor output", async () => {
     const stdout: string[] = [];
     vi.stubEnv("XAI_API_KEY", "");
@@ -598,6 +677,93 @@ describe("CLI", () => {
             }
           })
         ])
+      })
+    );
+  });
+
+  it("replays named sessions locally after an earlier image turn", async () => {
+    const directory = mkdtempSync(join(tmpdir(), "grok-agent-kit-cli-image-history-"));
+    tempDirectories.push(directory);
+    const imagePath = join(directory, "screen.png");
+    writeFileSync(imagePath, Buffer.from("png-binary"), "utf8");
+
+    const service = {
+      chat: vi.fn().mockResolvedValue({
+        text: "continued output",
+        citations: [],
+        responseId: "resp_next"
+      }),
+      xSearch: vi.fn(),
+      webSearch: vi.fn(),
+      models: vi.fn()
+    };
+    const sessionStore = {
+      get: vi.fn().mockResolvedValue({
+        name: "vision",
+        responseId: "resp_prev",
+        updatedAt: "2026-03-16T00:00:00.000Z",
+        history: [
+          {
+            prompt: "Describe the screenshot",
+            responseText: "It is a dashboard.",
+            responseId: "resp_prev",
+            createdAt: "2026-03-16T00:00:00.000Z",
+            citations: [],
+            images: [
+              {
+                path: imagePath,
+                fileName: "screen.png",
+                mediaType: "image/png"
+              }
+            ]
+          }
+        ]
+      }),
+      list: vi.fn(),
+      set: vi.fn().mockResolvedValue(undefined),
+      delete: vi.fn()
+    };
+
+    const cli = buildCli({
+      service,
+      sessionStore,
+      stdinIsTTY: () => true,
+      readStdin: vi.fn(),
+      startMcpServer: vi.fn(),
+      writeStdout: vi.fn(),
+      writeStdoutRaw: vi.fn(),
+      writeStderr: vi.fn()
+    });
+
+    await cli.parseAsync([
+      "node",
+      "grok-agent-kit",
+      "chat",
+      "--prompt",
+      "What changed next?",
+      "--session",
+      "vision"
+    ]);
+
+    expect(service.chat).toHaveBeenCalledWith(
+      expect.objectContaining({
+        prompt: "What changed next?",
+        history: expect.arrayContaining([
+          expect.objectContaining({
+            prompt: "Describe the screenshot",
+            images: [
+              expect.objectContaining({
+                path: imagePath
+              })
+            ]
+          })
+        ]),
+        store: false
+      })
+    );
+    expect(service.chat).not.toHaveBeenCalledWith(
+      expect.objectContaining({
+        previousResponseId: "resp_prev"
       })
     );
   });

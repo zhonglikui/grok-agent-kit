@@ -1,6 +1,18 @@
-import { describe, expect, it, vi } from "vitest";
+import { mkdtempSync, rmSync, writeFileSync } from "node:fs";
+import { tmpdir } from "node:os";
+import { join } from "node:path";
+
+import { afterEach, describe, expect, it, vi } from "vitest";
 
 import { createToolHandlers } from "../src/index.js";
+
+const tempDirectories: string[] = [];
+
+afterEach(() => {
+  for (const directory of tempDirectories.splice(0)) {
+    rmSync(directory, { recursive: true, force: true });
+  }
+});
 
 describe("createToolHandlers", () => {
   it("returns structured chat output", async () => {
@@ -413,6 +425,114 @@ describe("createToolHandlers", () => {
             responseText: "continued reply"
           })
         ])
+      })
+    );
+  });
+
+  it("passes resolved local images into MCP chat requests", async () => {
+    const directory = mkdtempSync(join(tmpdir(), "grok-agent-kit-mcp-image-"));
+    tempDirectories.push(directory);
+    const imagePath = join(directory, "screen.png");
+    writeFileSync(imagePath, Buffer.from("png-binary"), "utf8");
+
+    const service = {
+      chat: vi.fn().mockResolvedValue({
+        text: "vision reply",
+        citations: [],
+        responseId: "resp_vision"
+      }),
+      xSearch: vi.fn(),
+      webSearch: vi.fn(),
+      models: vi.fn()
+    };
+
+    const handlers = createToolHandlers(service);
+    await handlers.grok_chat({
+      prompt: "Describe the screenshot",
+      images: [
+        imagePath
+      ]
+    } as never);
+
+    expect(service.chat).toHaveBeenCalledWith(
+      expect.objectContaining({
+        prompt: "Describe the screenshot",
+        images: [
+          expect.objectContaining({
+            path: imagePath,
+            fileName: "screen.png",
+            mediaType: "image/png",
+            dataUrl: expect.stringContaining("data:image/png;base64,")
+          })
+        ],
+        store: false
+      })
+    );
+  });
+
+  it("replays named MCP sessions locally after an image turn", async () => {
+    const directory = mkdtempSync(join(tmpdir(), "grok-agent-kit-mcp-image-history-"));
+    tempDirectories.push(directory);
+    const imagePath = join(directory, "screen.png");
+    writeFileSync(imagePath, Buffer.from("png-binary"), "utf8");
+
+    const service = {
+      chat: vi.fn().mockResolvedValue({
+        text: "continued reply",
+        citations: [],
+        responseId: "resp_next"
+      }),
+      xSearch: vi.fn(),
+      webSearch: vi.fn(),
+      models: vi.fn()
+    };
+    const sessionStore = {
+      get: vi.fn().mockResolvedValue({
+        name: "vision",
+        responseId: "resp_prev",
+        updatedAt: "2026-03-16T01:00:00.000Z",
+        history: [
+          {
+            prompt: "Describe the screenshot",
+            responseText: "It shows a dashboard.",
+            responseId: "resp_prev",
+            createdAt: "2026-03-16T01:00:00.000Z",
+            citations: [],
+            images: [
+              {
+                path: imagePath,
+                fileName: "screen.png",
+                mediaType: "image/png"
+              }
+            ]
+          }
+        ]
+      }),
+      list: vi.fn(),
+      set: vi.fn().mockResolvedValue(undefined),
+      delete: vi.fn()
+    };
+
+    const handlers = createToolHandlers(service as never, sessionStore as never);
+    await handlers.grok_chat({
+      prompt: "What changed next?",
+      session: "vision"
+    });
+
+    expect(service.chat).toHaveBeenCalledWith(
+      expect.objectContaining({
+        prompt: "What changed next?",
+        history: expect.arrayContaining([
+          expect.objectContaining({
+            prompt: "Describe the screenshot"
+          })
+        ]),
+        store: false
+      })
+    );
+    expect(service.chat).not.toHaveBeenCalledWith(
+      expect.objectContaining({
+        previousResponseId: "resp_prev"
       })
     );
   });

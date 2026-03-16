@@ -25,7 +25,9 @@
 ## 本地会话说明
 
 - `grok_chat` 支持传入 `session`，获得类似 CLI 的命名本地会话续接能力。
+- `grok_chat` 支持传入 `images: ["/absolute/path/to/file.png"]`，用于本地 PNG / JPEG 图片分析。
 - `grok_chat`、`grok_x_search`、`grok_web_search` 仍支持 `previousResponseId` 与 `store`，用于显式响应链续接。
+- 带图片的命名聊天会话会从本地归档重放上下文，并以 `store: false` 运行，不依赖服务端历史。
 - `grok_list_sessions`、`grok_get_session`、`grok_delete_session` 提供基于 MCP 的本地会话管理能力。
 
 ## 示例配置

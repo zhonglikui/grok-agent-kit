@@ -1,14 +1,23 @@
 export type XaiMessageRole = "system" | "user" | "assistant";
 
-export interface XaiTextPart {
-  type: string;
+export interface XaiInputTextPart {
+  type: "input_text";
   text: string;
   [key: string]: unknown;
 }
 
+export interface XaiInputImagePart {
+  type: "input_image";
+  image_url: string;
+  detail?: "low" | "high" | "auto";
+  [key: string]: unknown;
+}
+
+export type XaiInputPart = XaiInputTextPart | XaiInputImagePart;
+
 export interface XaiInputMessage {
   role: XaiMessageRole;
-  content: string | XaiTextPart[];
+  content: string | XaiInputPart[];
 }
 
 export type XaiResponseInput = string | XaiInputMessage[];
