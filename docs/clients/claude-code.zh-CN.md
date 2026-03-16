@@ -16,6 +16,14 @@ claude mcp add grok-agent-kit --scope user node /absolute/path/to/grok-agent-kit
 claude mcp add grok-agent-kit --scope user npx -y grok-agent-kit mcp
 ```
 
+## 可选的本地认证管理
+
+如果你还想在本地运行 `grok-agent-kit auth validate-management` 之类的认证管理命令，可额外设置：
+
+- `XAI_MANAGEMENT_API_KEY`
+
+这个变量是可选的，不是 Claude Code MCP 推理流量的必需项。
+
 ## Skill 文件
 
 `skills/claude-code/SKILL.md` 可作为 Claude Code 风格工作流中的安装型 skill 内容。
@@ -38,6 +46,15 @@ Claude Code 与其他 MCP 客户端一样，可以使用以下连续上下文参
 
 如果命名会话里包含图片轮次，Claude Code 应优先依赖 `session` 的本地重放，而不是手动维护 `previousResponseId`。
 纯文本命名会话现在也可以通过同一个本地会话名在聊天与搜索工具之间继续。
+
+## 推荐搭配的本地命令
+
+在 MCP 之外，这些本地命令很适合和 Claude Code 配套使用：
+
+- `grok-agent-kit chat --interactive`
+- `grok-agent-kit x-search --interactive`
+- `grok-agent-kit web-search --interactive`
+- `grok-agent-kit auth status`
 
 ## 示例配置
 

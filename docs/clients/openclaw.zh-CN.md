@@ -39,6 +39,14 @@
 }
 ```
 
+## 可选的本地认证管理
+
+如果你还想在 MCP 之外运行本地认证管理命令，可额外设置：
+
+- `XAI_MANAGEMENT_API_KEY`
+
+这个变量是可选的，不是 OpenClaw MCP 推理流量的必需项。
+
 ## Skill 文件
 
 `skills/openclaw/SKILL.md` 可作为面向 OpenClaw 的搜索指导文件。
@@ -56,6 +64,15 @@ OpenClaw 可使用以下 MCP 参数与工具实现本地连续上下文：
 
 如果命名会话里包含图片轮次，应优先使用本地 `session` 重放流程，而不是 `previousResponseId`。
 纯文本命名会话现在也可以通过同一个本地会话名在聊天与搜索工具之间流转。
+
+## 推荐搭配的本地命令
+
+在 MCP 之外，这些本地命令很适合和 OpenClaw 配套使用：
+
+- `grok-agent-kit chat --interactive`
+- `grok-agent-kit x-search --interactive`
+- `grok-agent-kit web-search --interactive`
+- `grok-agent-kit auth status`
 
 ## 示例配置
 

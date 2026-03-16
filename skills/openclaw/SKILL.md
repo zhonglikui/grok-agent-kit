@@ -16,6 +16,7 @@ description: Use Grok MCP tools for X search, web search, and synthesis when the
 - Use handle filters before broad prompt rewriting for X-specific research.
 - Use domain filters for official web research.
 - Keep source links in the final answer when relevant.
+- Use `session` for multi-turn continuity and `resetSession` when a named search thread needs a fresh start.
 
 ## Good fits
 

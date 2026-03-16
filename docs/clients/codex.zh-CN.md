@@ -26,11 +26,19 @@ args = ["-y", "grok-agent-kit", "mcp"]
 env = { XAI_API_KEY = "YOUR_XAI_API_KEY" }
 ```
 
+## 可选的本地认证管理
+
+如果你还想在 MCP 之外运行本地认证管理命令，可额外设置：
+
+- `XAI_MANAGEMENT_API_KEY`
+
+这个变量是可选的，不是 Codex MCP 推理流量的必需项。
+
 ## 建议补充给 Codex 的指导语
 
 Codex 不会像 Claude Code 那样直接消费 `SKILL.md`，因此建议把下面这类说明写进项目 `AGENTS.md` 或你的个人提示词里：
 
-> Use `grok_x_search` for live X content, `grok_web_search` for docs and web grounding, and `grok_chat` only after search when synthesis is needed. Prefer sources with citations and tighten domain or handle filters before broadening.
+> Use `grok_x_search` for live X content, `grok_web_search` for docs and web grounding, and `grok_chat` only after search when synthesis is needed. Prefer `session` for continuity, preserve citations, and tighten domain or handle filters before broadening.
 
 ## 有状态 MCP 用法
 
@@ -51,4 +59,11 @@ Codex 也可以通过以下工具查看或清理本地会话状态：
 如果命名会话里包含图片轮次，`grok_chat` 会以 `store: false` 重放本地转录，而不是使用 `previousResponseId`。
 纯文本命名会话现在也可以在 `grok_chat`、`grok_x_search` 与 `grok_web_search` 之间共用同一个本地会话名。
 
-如果是在本地终端直接使用而不是通过 MCP，优先用 `grok-agent-kit chat --session <name>`。
+## 推荐搭配的本地命令
+
+在 MCP 之外，这些本地命令很适合和 Codex 配套使用：
+
+- `grok-agent-kit chat --interactive`
+- `grok-agent-kit x-search --interactive`
+- `grok-agent-kit web-search --interactive`
+- `grok-agent-kit auth status`

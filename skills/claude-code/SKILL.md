@@ -19,6 +19,8 @@ Use the `grok-agent-kit` MCP server when you need xAI Grok-backed search and syn
 - Prefer one search tool at a time before synthesizing.
 - Preserve citations when summarizing.
 - If a result looks weak or partial, run a second search with tighter domain or handle filters.
+- Use `session` when you want continuity across multiple MCP calls.
+- Use `resetSession` when a named search flow should start over cleanly.
 
 ## Example prompts
 

@@ -10,4 +10,4 @@ Codex does not consume Claude-style `SKILL.md` files in the same way, so the Cod
 
 Suggested guidance text:
 
-> Use `grok_x_search` for live X content, `grok_web_search` for docs and web grounding, and `grok_chat` only after search when synthesis is needed. Prefer sources with citations and tighten domain or handle filters before broadening.
+> Use `grok_x_search` for live X content, `grok_web_search` for docs and web grounding, and `grok_chat` only after search when synthesis is needed. Prefer `session` for continuity, preserve citations, and tighten domain or handle filters before broadening.

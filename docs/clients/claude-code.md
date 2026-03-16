@@ -16,6 +16,14 @@ Set `XAI_API_KEY` before launching Claude Code, or use the client's MCP environm
 claude mcp add grok-agent-kit --scope user npx -y grok-agent-kit mcp
 ```
 
+## Optional local auth management
+
+If you also want to run local auth-management commands such as `grok-agent-kit auth validate-management`, set:
+
+- `XAI_MANAGEMENT_API_KEY`
+
+This is optional and not required for Claude Code MCP inference traffic.
+
 ## Skill asset
 
 Use `skills/claude-code/SKILL.md` as the installable skill content for Claude Code style workflows.
@@ -37,7 +45,16 @@ For local session administration, use:
 - `grok_delete_session`
 
 When a named session contains image turns, Claude Code should rely on `session` replay instead of manually threading `previousResponseId`.
-Text-only named sessions can now be continued across chat and search tools through the same local session name.
+Text-only named sessions can be continued across chat and search tools through the same local session name.
+
+## Useful local CLI companions
+
+Outside MCP, these local commands pair well with Claude Code:
+
+- `grok-agent-kit chat --interactive`
+- `grok-agent-kit x-search --interactive`
+- `grok-agent-kit web-search --interactive`
+- `grok-agent-kit auth status`
 
 ## Example config
 

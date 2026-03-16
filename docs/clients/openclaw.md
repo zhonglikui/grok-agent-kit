@@ -39,6 +39,14 @@ Add an MCP server entry that launches the built CLI:
 }
 ```
 
+## Optional local auth management
+
+If you also want to run local auth-management commands outside MCP, set:
+
+- `XAI_MANAGEMENT_API_KEY`
+
+This is optional and not required for OpenClaw MCP inference traffic.
+
 ## Skill asset
 
 Use `skills/openclaw/SKILL.md` for OpenClaw-oriented search guidance.
@@ -55,7 +63,16 @@ OpenClaw can use these MCP parameters and tools for local continuity:
 - `grok_list_sessions`, `grok_get_session`, and `grok_delete_session` to manage saved local sessions
 
 If a named session includes image turns, rely on the local `session` replay flow rather than `previousResponseId`.
-Text-only named sessions can also move between chat and search tools through the same local session name.
+Text-only named sessions can move between chat and search tools through the same local session name.
+
+## Useful local CLI companions
+
+Outside MCP, these local commands pair well with OpenClaw:
+
+- `grok-agent-kit chat --interactive`
+- `grok-agent-kit x-search --interactive`
+- `grok-agent-kit web-search --interactive`
+- `grok-agent-kit auth status`
 
 ## Example config
 
