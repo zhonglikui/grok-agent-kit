@@ -93,6 +93,14 @@ npx -y grok-agent-kit models
 npx -y grok-agent-kit mcp
 ```
 
+Or install it globally first:
+
+```bash
+npm install -g grok-agent-kit
+grok-agent-kit doctor
+grok-agent-kit chat --prompt "Hello from Grok"
+```
+
 For local development:
 
 ```bash

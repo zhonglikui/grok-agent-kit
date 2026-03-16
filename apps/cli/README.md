@@ -7,6 +7,14 @@ Community-built, unofficial CLI + MCP + skills toolkit for xAI Grok.
 ## Install
 
 ```bash
+npm install -g grok-agent-kit
+grok-agent-kit doctor
+grok-agent-kit chat --prompt "Hello from Grok"
+```
+
+Or run it without a global install:
+
+```bash
 npx -y grok-agent-kit chat --prompt "Hello from Grok"
 npx -y grok-agent-kit auth status
 npx -y grok-agent-kit auth validate-management

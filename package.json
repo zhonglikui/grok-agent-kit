@@ -10,6 +10,7 @@
     "build:packages": "npm run build --workspace packages/xai-client && npm run build --workspace packages/core && npm run build --workspace packages/mcp-server",
     "build": "npm run build:packages && npm run build --workspace apps/cli",
     "pack:cli": "node -e \"const fs = require('node:fs'); fs.rmSync('.artifacts', { recursive: true, force: true }); fs.mkdirSync('.artifacts', { recursive: true });\" && npm pack --workspace apps/cli --json --pack-destination ./.artifacts",
+    "smoke:pack-install": "node scripts/smoke-pack-install.mjs",
     "test": "npx vitest run",
     "test:watch": "npx vitest",
     "typecheck": "npm run typecheck --workspace packages/xai-client && npm run typecheck --workspace packages/core && npm run typecheck --workspace packages/mcp-server && npm run typecheck --workspace apps/cli"

@@ -92,6 +92,14 @@ npx -y grok-agent-kit models
 npx -y grok-agent-kit mcp
 ```
 
+如果你更喜欢先全局安装，也可以这样：
+
+```bash
+npm install -g grok-agent-kit
+grok-agent-kit doctor
+grok-agent-kit chat --prompt "Hello from Grok"
+```
+
 本地开发方式：
 
 ```bash

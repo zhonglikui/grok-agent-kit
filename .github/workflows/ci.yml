@@ -34,3 +34,6 @@ jobs:
 
       - name: Pack CLI
         run: npm run pack:cli
+
+      - name: Smoke install from tarball
+        run: npm run smoke:pack-install
