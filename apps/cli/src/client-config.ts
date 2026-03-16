@@ -90,8 +90,22 @@ function renderOpenClawConfig(input: RenderClientConfigInput): string {
 }
 
 function resolveLocalCliPath(projectPath?: string): string {
-  const resolvedProjectPath = normalizePath(resolve(projectPath ?? process.cwd()));
+  const resolvedProjectPath = resolveProjectPath(projectPath);
   return `${resolvedProjectPath}/apps/cli/dist/bin.js`;
+}
+
+function resolveProjectPath(projectPath?: string): string {
+  if (!projectPath) {
+    return normalizePath(resolve(process.cwd()));
+  }
+
+  const normalized = normalizePath(projectPath);
+
+  if (normalized.startsWith("/")) {
+    return normalized.replace(/\/$/, "");
+  }
+
+  return normalizePath(resolve(projectPath));
 }
 
 function normalizePath(value: string): string {
