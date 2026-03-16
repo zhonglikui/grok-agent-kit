@@ -28,6 +28,7 @@ Claude Code 与其他 MCP 客户端一样，可以使用以下连续上下文参
 - `store: true`：让这条响应链后续还可继续续接
 - `session`：传给 `grok_chat` 后，可直接恢复命名本地会话，无需手动维护 ID
 - `images`：传给 `grok_chat` 后，可附加本地截图或照片
+- `session` 与 `resetSession`：传给 `grok_x_search` / `grok_web_search` 后，可运行命名的多轮搜索流程
 
 如需管理本地会话，可使用：
 
@@ -36,6 +37,7 @@ Claude Code 与其他 MCP 客户端一样，可以使用以下连续上下文参
 - `grok_delete_session`
 
 如果命名会话里包含图片轮次，Claude Code 应优先依赖 `session` 的本地重放，而不是手动维护 `previousResponseId`。
+纯文本命名会话现在也可以通过同一个本地会话名在聊天与搜索工具之间继续。
 
 ## 示例配置
 

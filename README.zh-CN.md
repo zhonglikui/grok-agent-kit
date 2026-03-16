@@ -122,6 +122,7 @@ node apps/cli/dist/bin.js mcp
 - MCP 客户端可向 `grok_chat` 传入 `images: ["/absolute/path/to/screenshot.png"]` 来做本地多模态分析。
 - MCP 客户端也可用 `grok_list_sessions`、`grok_get_session`、`grok_delete_session` 管理本地会话。
 - MCP 客户端可给 `grok_chat` 传入 `session`，获得类似 CLI 的命名本地会话续接能力。
+- MCP 客户端也可向 `grok_x_search` 与 `grok_web_search` 传入 `session` 和 `resetSession`，获得类似 CLI 的命名搜索续接能力。
 - 带图片的命名会话会从本地会话归档重放上下文，并以 `store: false` 运行，而不是依赖服务端历史。
 - MCP 客户端可对 `grok_chat`、`grok_x_search`、`grok_web_search` 传入 `stream: true`，并请求 MCP progress 通知，以便从 `notifications/progress.params.message` 接收文本增量。
 

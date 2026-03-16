@@ -27,6 +27,7 @@ Use these guides to connect `grok-agent-kit` to supported agent clients.
 - `grok_chat` accepts `session` for CLI-style named local session continuation.
 - `grok_chat` accepts `images: ["/absolute/path/to/file.png"]` for local PNG/JPEG analysis.
 - `grok_chat`, `grok_x_search`, and `grok_web_search` still accept `previousResponseId` and `store` for explicit response chaining.
+- `grok_x_search` and `grok_web_search` now also accept `session` and `resetSession` for named local search workflows.
 - Image-backed named chat sessions replay from the local archive with `store: false` instead of relying on server-side history.
 - `grok_list_sessions`, `grok_get_session`, and `grok_delete_session` provide local session management over MCP.
 

@@ -132,6 +132,60 @@ describe("createToolHandlers", () => {
     expect(result.structuredContent.text).toBe("First result");
   });
 
+  it("continues a named MCP X Search session and persists the result", async () => {
+    const service = {
+      chat: vi.fn(),
+      xSearch: vi.fn().mockResolvedValue({
+        text: "x session reply",
+        citations: [
+          {
+            url: "https://x.com/xai/status/2"
+          }
+        ],
+        responseId: "resp_x_next"
+      }),
+      webSearch: vi.fn(),
+      models: vi.fn()
+    };
+    const sessionStore = {
+      get: vi.fn().mockResolvedValue({
+        name: "research",
+        responseId: "resp_x_prev",
+        updatedAt: "2026-03-16T01:00:00.000Z",
+        history: []
+      }),
+      list: vi.fn(),
+      set: vi.fn().mockResolvedValue(undefined),
+      delete: vi.fn()
+    };
+
+    const handlers = createToolHandlers(service as never, sessionStore as never);
+    await handlers.grok_x_search({
+      prompt: "Find launch posts",
+      session: "research"
+    } as never);
+
+    expect(service.xSearch).toHaveBeenCalledWith(
+      expect.objectContaining({
+        prompt: "Find launch posts",
+        previousResponseId: "resp_x_prev",
+        store: true
+      })
+    );
+    expect(sessionStore.set).toHaveBeenCalledWith(
+      "research",
+      expect.objectContaining({
+        responseId: "resp_x_next",
+        history: expect.arrayContaining([
+          expect.objectContaining({
+            prompt: "Find launch posts",
+            responseText: "x session reply"
+          })
+        ])
+      })
+    );
+  });
+
   it("emits progress notifications for streamed chat requests", async () => {
     const sendNotification = vi.fn().mockResolvedValue(undefined);
     const service = {
@@ -246,6 +300,99 @@ describe("createToolHandlers", () => {
       }
     });
     expect(result.structuredContent.text).toBe("Web result");
+  });
+
+  it("continues a named MCP Web Search session and persists the result", async () => {
+    const service = {
+      chat: vi.fn(),
+      xSearch: vi.fn(),
+      webSearch: vi.fn().mockResolvedValue({
+        text: "web session reply",
+        citations: [
+          {
+            url: "https://docs.x.ai/en/latest"
+          }
+        ],
+        responseId: "resp_web_next"
+      }),
+      models: vi.fn()
+    };
+    const sessionStore = {
+      get: vi.fn().mockResolvedValue({
+        name: "docs",
+        responseId: "resp_web_prev",
+        updatedAt: "2026-03-16T01:00:00.000Z",
+        history: []
+      }),
+      list: vi.fn(),
+      set: vi.fn().mockResolvedValue(undefined),
+      delete: vi.fn()
+    };
+
+    const handlers = createToolHandlers(service as never, sessionStore as never);
+    await handlers.grok_web_search({
+      prompt: "Find docs updates",
+      session: "docs"
+    } as never);
+
+    expect(service.webSearch).toHaveBeenCalledWith(
+      expect.objectContaining({
+        prompt: "Find docs updates",
+        previousResponseId: "resp_web_prev",
+        store: true
+      })
+    );
+    expect(sessionStore.set).toHaveBeenCalledWith(
+      "docs",
+      expect.objectContaining({
+        responseId: "resp_web_next",
+        history: expect.arrayContaining([
+          expect.objectContaining({
+            prompt: "Find docs updates",
+            responseText: "web session reply"
+          })
+        ])
+      })
+    );
+  });
+
+  it("resets a named MCP search session before issuing a new request", async () => {
+    const service = {
+      chat: vi.fn(),
+      xSearch: vi.fn().mockResolvedValue({
+        text: "fresh x session",
+        citations: [],
+        responseId: "resp_x_fresh"
+      }),
+      webSearch: vi.fn(),
+      models: vi.fn()
+    };
+    const sessionStore = {
+      get: vi.fn().mockResolvedValue(undefined),
+      list: vi.fn(),
+      set: vi.fn().mockResolvedValue(undefined),
+      delete: vi.fn().mockResolvedValue(undefined)
+    };
+
+    const handlers = createToolHandlers(service as never, sessionStore as never);
+    await handlers.grok_x_search({
+      prompt: "Start over",
+      session: "research",
+      resetSession: true
+    } as never);
+
+    expect(sessionStore.delete).toHaveBeenCalledWith("research");
+    expect(service.xSearch).toHaveBeenCalledWith(
+      expect.objectContaining({
+        prompt: "Start over",
+        store: true
+      })
+    );
+    expect(service.xSearch).not.toHaveBeenCalledWith(
+      expect.objectContaining({
+        previousResponseId: expect.anything()
+      })
+    );
   });
 
   it("returns structured model output", async () => {

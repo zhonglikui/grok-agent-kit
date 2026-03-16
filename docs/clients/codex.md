@@ -40,6 +40,7 @@ When Codex needs continuity across tool calls, pass:
 - `store: true` when the follow-up should remain resumable
 - `session` on `grok_chat` when you want local named-session auto-resume without manually threading IDs
 - `images` on `grok_chat` when you want local screenshot or photo analysis
+- `session` and `resetSession` on `grok_x_search` / `grok_web_search` when you want multi-turn search workflows without manual response-id tracking
 
 Codex can also inspect or clean up saved local state through:
 
@@ -48,5 +49,6 @@ Codex can also inspect or clean up saved local state through:
 - `grok_delete_session`
 
 If a named session includes image turns, `grok_chat` replays the local transcript with `store: false` instead of using `previousResponseId`.
+Text-only named sessions can now move between `grok_chat`, `grok_x_search`, and `grok_web_search` through the same local session name.
 
 For local terminal usage outside MCP, prefer `grok-agent-kit chat --session <name>`.

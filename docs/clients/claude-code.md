@@ -28,6 +28,7 @@ Claude Code can use the same continuity controls as other MCP clients:
 - `store: true` to keep a response chain resumable
 - `session` on `grok_chat` to resume a named local session without manual ID tracking
 - `images` on `grok_chat` to attach local screenshots or photos
+- `session` and `resetSession` on `grok_x_search` / `grok_web_search` to run named multi-turn search flows
 
 For local session administration, use:
 
@@ -36,6 +37,7 @@ For local session administration, use:
 - `grok_delete_session`
 
 When a named session contains image turns, Claude Code should rely on `session` replay instead of manually threading `previousResponseId`.
+Text-only named sessions can now be continued across chat and search tools through the same local session name.
 
 ## Example config
 

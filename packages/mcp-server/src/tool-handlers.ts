@@ -27,10 +27,14 @@ type McpChatInput = Omit<ChatOptions, "images"> & {
 };
 
 type McpXSearchInput = XSearchOptions & {
+  session?: string;
+  resetSession?: boolean;
   stream?: boolean;
 };
 
 type McpWebSearchInput = WebSearchOptions & {
+  session?: string;
+  resetSession?: boolean;
   stream?: boolean;
 };
 
@@ -136,14 +140,20 @@ export function createToolHandlers(service: {
     },
 
     async grok_x_search(input: McpXSearchInput, extra?: ToolHandlerExtra) {
-      return runStreamableTextTool(input, extra, (serviceInput) =>
-        service.xSearch(serviceInput)
+      return runSessionBackedSearchTool(
+        input,
+        extra,
+        sessionStore,
+        (serviceInput) => service.xSearch(serviceInput)
       );
     },
 
     async grok_web_search(input: McpWebSearchInput, extra?: ToolHandlerExtra) {
-      return runStreamableTextTool(input, extra, (serviceInput) =>
-        service.webSearch(serviceInput)
+      return runSessionBackedSearchTool(
+        input,
+        extra,
+        sessionStore,
+        (serviceInput) => service.webSearch(serviceInput)
       );
     },
 
@@ -263,6 +273,73 @@ async function runStreamableTextTool<TInput extends ChatOptions | XSearchOptions
 
     return result;
   });
+}
+
+async function runSessionBackedSearchTool<
+  TInput extends XSearchOptions | WebSearchOptions
+>(
+  input: TInput & {
+    session?: string;
+    resetSession?: boolean;
+    stream?: boolean;
+  },
+  extra: ToolHandlerExtra | undefined,
+  sessionStore: SessionStore,
+  loader: (input: TInput) => Promise<GrokTextResult>
+) {
+  try {
+    if (input.resetSession && !input.session) {
+      return createErrorResult(new Error("resetSession requires session"));
+    }
+
+    if (input.session && input.store === false) {
+      return createErrorResult(new Error("session cannot be used with store=false"));
+    }
+
+    if (input.resetSession && input.session) {
+      await sessionStore.delete(input.session);
+    }
+
+    const existingSession = input.session
+      ? await sessionStore.get(input.session)
+      : undefined;
+    const { session, resetSession, ...searchInput } = input;
+    const sessionAwareInput = {
+      ...(searchInput as TInput & { stream?: boolean }),
+      ...(session && !searchInput.previousResponseId
+        ? { previousResponseId: existingSession?.responseId }
+        : {}),
+      ...(session ? { store: true } : {})
+    } as TInput & { stream?: boolean };
+
+    return runStreamableTextTool(
+      sessionAwareInput,
+      extra,
+      loader,
+      async (result) => {
+        if (!session) {
+          return;
+        }
+
+        const nextResponseId = result.responseId ?? existingSession?.responseId;
+        if (!nextResponseId) {
+          return;
+        }
+
+        const timestamp = new Date().toISOString();
+        await sessionStore.set(session, {
+          responseId: nextResponseId,
+          updatedAt: timestamp,
+          history: [
+            ...(existingSession?.history ?? []),
+            createSessionHistoryEntry(searchInput.prompt, result, timestamp)
+          ]
+        });
+      }
+    );
+  } catch (error) {
+    return createErrorResult(error);
+  }
 }
 
 function createProgressNotifier(

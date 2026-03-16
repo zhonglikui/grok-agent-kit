@@ -51,9 +51,11 @@ OpenClaw can use these MCP parameters and tools for local continuity:
 - `store: true` to keep a response chain resumable
 - `session` on `grok_chat` to auto-resume a named local session
 - `images` on `grok_chat` to attach local screenshots or photos
+- `session` and `resetSession` on `grok_x_search` / `grok_web_search` to keep named local search threads
 - `grok_list_sessions`, `grok_get_session`, and `grok_delete_session` to manage saved local sessions
 
 If a named session includes image turns, rely on the local `session` replay flow rather than `previousResponseId`.
+Text-only named sessions can also move between chat and search tools through the same local session name.
 
 ## Example config
 

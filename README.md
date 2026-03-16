@@ -123,6 +123,7 @@ node apps/cli/dist/bin.js mcp
 - MCP clients can pass `images: ["/absolute/path/to/screenshot.png"]` to `grok_chat` for local multimodal analysis.
 - MCP clients can also use `grok_list_sessions`, `grok_get_session`, and `grok_delete_session` for local session management.
 - MCP clients can pass `session` to `grok_chat` for CLI-style named local session continuation.
+- MCP clients can also pass `session` and `resetSession` to `grok_x_search` and `grok_web_search` for CLI-style named search continuity.
 - Image-backed named sessions replay from the local session archive with `store: false` instead of depending on server-side response history.
 - MCP clients can pass `stream: true` to `grok_chat`, `grok_x_search`, and `grok_web_search`, then request MCP progress notifications to receive text deltas in `notifications/progress.params.message`.
 
