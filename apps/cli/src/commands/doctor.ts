@@ -59,17 +59,32 @@ async function collectDoctorChecks(
   const nodeCheck = checkNodeVersion();
   const apiKeyCheck = checkApiKey(process.env.XAI_API_KEY);
   const baseUrlCheck = checkBaseUrl(process.env.XAI_BASE_URL);
+  const managementApiKeyCheck = checkManagementApiKey(process.env.XAI_MANAGEMENT_API_KEY);
+  const managementBaseUrlCheck = checkManagementBaseUrl(
+    process.env.XAI_MANAGEMENT_BASE_URL
+  );
   const modelCheck = checkDefaultModel(process.env.GROK_AGENT_KIT_MODEL);
 
   checks.push(nodeCheck);
   checks.push(apiKeyCheck);
   checks.push(baseUrlCheck);
+  checks.push(managementApiKeyCheck);
+  checks.push(managementBaseUrlCheck);
   checks.push(modelCheck);
   checks.push(
     await checkApiConnectivity(
       {
         apiKey: apiKeyCheck,
         baseUrl: baseUrlCheck
+      },
+      dependencies
+    )
+  );
+  checks.push(
+    await checkManagementApiConnectivity(
+      {
+        managementApiKey: managementApiKeyCheck,
+        managementBaseUrl: managementBaseUrlCheck
       },
       dependencies
     )
@@ -129,6 +144,61 @@ async function checkApiConnectivity(
   }
 }
 
+async function checkManagementApiConnectivity(
+  prerequisites: {
+    managementApiKey: DoctorCheck;
+    managementBaseUrl: DoctorCheck;
+  },
+  dependencies: CliDependencies
+): Promise<DoctorCheck> {
+  if (
+    prerequisites.managementApiKey.status !== "PASS" ||
+    prerequisites.managementBaseUrl.status === "FAIL"
+  ) {
+    return {
+      status: "WARN",
+      label: "xAI management API connectivity",
+      detail: "Skipped because the management key or management base URL is not ready yet.",
+      fix: "Set `XAI_MANAGEMENT_API_KEY` to use local team API key management commands."
+    };
+  }
+
+  if (!dependencies.authService) {
+    return {
+      status: "WARN",
+      label: "xAI management API connectivity",
+      detail: "Auth service is not configured in this process.",
+      fix: "Run the packaged CLI entrypoint or provide an auth service implementation."
+    };
+  }
+
+  try {
+    const validation = await dependencies.authService.validateManagementKey();
+
+    return {
+      status: validation.valid ? "PASS" : "FAIL",
+      label: "xAI management API connectivity",
+      detail: validation.valid
+        ? `Validated the configured management key${validation.teamIds?.length ? ` for teams: ${validation.teamIds.join(", ")}` : "."}`
+        : "Management API responded but reported the key as invalid.",
+      ...(validation.valid
+        ? {}
+        : {
+            fix: "Verify `XAI_MANAGEMENT_API_KEY`, then re-run `grok-agent-kit doctor`."
+          })
+    };
+  } catch (error) {
+    const detail = error instanceof Error ? error.message : "Unknown management API error";
+
+    return {
+      status: "FAIL",
+      label: "xAI management API connectivity",
+      detail,
+      fix: "Verify `XAI_MANAGEMENT_API_KEY` and `XAI_MANAGEMENT_BASE_URL`, then re-run `grok-agent-kit doctor`."
+    };
+  }
+}
+
 function checkNodeVersion(): DoctorCheck {
   const majorVersion = Number(/^v(\d+)/.exec(process.version)?.[1] ?? 0);
 
@@ -184,6 +254,46 @@ function checkBaseUrl(baseUrl: string | undefined): DoctorCheck {
       label: "XAI_BASE_URL",
       detail: `Value is not a valid absolute URL: ${resolvedBaseUrl}`,
       fix: "Set `XAI_BASE_URL` to a valid absolute URL or unset it to use the default."
+    };
+  }
+}
+
+function checkManagementApiKey(apiKey: string | undefined): DoctorCheck {
+  if (apiKey && apiKey.trim().length > 0) {
+    return {
+      status: "PASS",
+      label: "XAI_MANAGEMENT_API_KEY",
+      detail: "Environment variable is set."
+    };
+  }
+
+  return {
+    status: "WARN",
+    label: "XAI_MANAGEMENT_API_KEY",
+    detail: "Environment variable is missing or empty.",
+    fix: "Set `XAI_MANAGEMENT_API_KEY` only if you want to validate, list, or create team API keys locally."
+  };
+}
+
+function checkManagementBaseUrl(baseUrl: string | undefined): DoctorCheck {
+  const resolvedBaseUrl = baseUrl && baseUrl.trim().length > 0
+    ? baseUrl
+    : "https://management-api.x.ai";
+
+  try {
+    const parsedUrl = new URL(resolvedBaseUrl);
+
+    return {
+      status: "PASS",
+      label: "XAI_MANAGEMENT_BASE_URL",
+      detail: `Using ${parsedUrl.toString()}`
+    };
+  } catch {
+    return {
+      status: "FAIL",
+      label: "XAI_MANAGEMENT_BASE_URL",
+      detail: `Value is not a valid absolute URL: ${resolvedBaseUrl}`,
+      fix: "Set `XAI_MANAGEMENT_BASE_URL` to a valid absolute URL or unset it to use the default."
     };
   }
 }

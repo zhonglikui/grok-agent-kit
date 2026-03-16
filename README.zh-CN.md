@@ -177,8 +177,11 @@ node apps/cli/dist/bin.js mcp
 - 是否使用受支持的 Node.js 版本
 - `XAI_API_KEY` 是否存在
 - `XAI_BASE_URL` 是否为有效 URL
+- `XAI_MANAGEMENT_API_KEY` 是否存在
+- `XAI_MANAGEMENT_BASE_URL` 是否为有效 URL
 - `GROK_AGENT_KIT_MODEL` 是否为空或将回退默认值
 - 在本地前置条件有效时，通过 models endpoint 做一次真实的 xAI API 连通性检查
+- 在本地前置条件有效时，通过 management key 校验做一次真实的 xAI management API 连通性检查
 - 本地状态目录与 `sessions.json` 是否可读
 
 ## 认证管理

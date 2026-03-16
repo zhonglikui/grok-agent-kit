@@ -178,8 +178,11 @@ It currently checks:
 - supported Node.js version
 - `XAI_API_KEY` presence
 - `XAI_BASE_URL` validity
+- `XAI_MANAGEMENT_API_KEY` presence
+- `XAI_MANAGEMENT_BASE_URL` validity
 - `GROK_AGENT_KIT_MODEL` fallback or value
 - live xAI API connectivity through the models endpoint when local prerequisites are valid
+- live xAI management API connectivity through management-key validation when local prerequisites are valid
 - local state directory and `sessions.json` readability
 
 ## Auth management
