@@ -239,6 +239,8 @@ node apps/cli/dist/bin.js mcp
 - 漏洞反馈请查看 [SECURITY.md](./SECURITY.md)
 - 社区协作行为规范见 [CODE_OF_CONDUCT.md](./CODE_OF_CONDUCT.md)
 - 配置仓库密钥 `NPM_TOKEN` 后，可通过 `.github/workflows/publish.yml` 在 GitHub Actions 中发布
+- 面向公开 npm 发布前，请先使用[发布清单](./docs/release/launch-checklist.zh-CN.md)
+- 准备 npm、MCP、skills 社区文案时，可复用[社区上架模板](./docs/release/community-listings.zh-CN.md)
 
 ## 仓库结构
 
