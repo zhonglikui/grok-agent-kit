@@ -72,6 +72,8 @@ npx -y grok-agent-kit sessions show research
 npx -y grok-agent-kit sessions export research --format markdown
 npx -y grok-agent-kit x-search --prompt "Latest xAI posts" --stream
 npx -y grok-agent-kit web-search --prompt "Latest xAI docs" --stream
+npx -y grok-agent-kit x-search --interactive --allow-handle xai
+npx -y grok-agent-kit web-search --interactive --session research --allow-domain docs.x.ai
 npx -y grok-agent-kit x-search --session research --prompt "Latest xAI posts"
 npx -y grok-agent-kit web-search --session research --prompt "Latest xAI docs"
 npx -y grok-agent-kit sessions list
@@ -101,6 +103,8 @@ node apps/cli/dist/bin.js sessions show demo
 node apps/cli/dist/bin.js sessions export demo --format markdown --output ./demo-session.md
 node apps/cli/dist/bin.js x-search --prompt "Find recent xAI posts" --stream
 node apps/cli/dist/bin.js web-search --prompt "Find updated xAI docs" --stream
+node apps/cli/dist/bin.js x-search --interactive --allow-handle xai
+node apps/cli/dist/bin.js web-search --interactive --session demo --allow-domain docs.x.ai
 node apps/cli/dist/bin.js x-search --session demo --prompt "Find recent xAI posts"
 node apps/cli/dist/bin.js web-search --session demo --prompt "Find updated xAI docs"
 node apps/cli/dist/bin.js sessions list
@@ -122,6 +126,8 @@ node apps/cli/dist/bin.js mcp
 - 在交互式 chat 中，可用 `/exit` 干净退出 REPL。
 - 用 `chat --stream` 在 xAI 逐步返回内容时直接输出文本增量。
 - 用 `x-search --stream` 和 `web-search --stream` 流式输出搜索文本结果。
+- 用 `x-search --interactive` 和 `web-search --interactive` 在终端里进入可连续追问的搜索 REPL。
+- 在交互式 search 中，可用 `/reset` 清空当前搜索上下文，也可用 `/exit` 退出 REPL。
 - 用 `x-search --session <name>` 和 `web-search --session <name>` 在同一个命名会话里继续搜索工作流。
 - 用 `sessions show <name>` 打印该命名会话的本地转录记录；如果有数据，也会显示模型和 token 汇总。
 - 用 `sessions list --search <pattern> --model <model> --limit <n>` 过滤更大的本地会话归档。
@@ -149,6 +155,7 @@ node apps/cli/dist/bin.js mcp
 - 如果命令接收到管道 stdin，会把管道内容追加到 `--prompt` 或 `--prompt-file` 之后，并用一个空行分隔。
 - 也可以只使用管道 stdin，不传 `--prompt`，直接把完整 prompt 内容通过管道送入。
 - 交互式 chat 需要 TTY，不能和 `--prompt`、`--prompt-file` 或管道 stdin 混用。
+- 交互式 `x-search` / `web-search` 也需要 TTY，且不能和 prompt 参数、管道 stdin、`--json`、`--no-store` 混用。
 
 ## 诊断
 

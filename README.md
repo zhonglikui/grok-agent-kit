@@ -73,6 +73,8 @@ npx -y grok-agent-kit sessions show research
 npx -y grok-agent-kit sessions export research --format markdown
 npx -y grok-agent-kit x-search --prompt "Latest xAI posts" --stream
 npx -y grok-agent-kit web-search --prompt "Latest xAI docs" --stream
+npx -y grok-agent-kit x-search --interactive --allow-handle xai
+npx -y grok-agent-kit web-search --interactive --session research --allow-domain docs.x.ai
 npx -y grok-agent-kit x-search --session research --prompt "Latest xAI posts"
 npx -y grok-agent-kit web-search --session research --prompt "Latest xAI docs"
 npx -y grok-agent-kit sessions list
@@ -102,6 +104,8 @@ node apps/cli/dist/bin.js sessions show demo
 node apps/cli/dist/bin.js sessions export demo --format markdown --output ./demo-session.md
 node apps/cli/dist/bin.js x-search --prompt "Find recent xAI posts" --stream
 node apps/cli/dist/bin.js web-search --prompt "Find updated xAI docs" --stream
+node apps/cli/dist/bin.js x-search --interactive --allow-handle xai
+node apps/cli/dist/bin.js web-search --interactive --session demo --allow-domain docs.x.ai
 node apps/cli/dist/bin.js x-search --session demo --prompt "Find recent xAI posts"
 node apps/cli/dist/bin.js web-search --session demo --prompt "Find updated xAI docs"
 node apps/cli/dist/bin.js sessions list
@@ -123,6 +127,8 @@ node apps/cli/dist/bin.js mcp
 - Inside interactive chat, use `/exit` to leave the REPL cleanly.
 - Use `chat --stream` to print chat text incrementally as xAI sends deltas.
 - Use `x-search --stream` and `web-search --stream` to stream search text incrementally.
+- Use `x-search --interactive` and `web-search --interactive` for live search REPL loops in the terminal.
+- Use `/reset` and `/exit` inside interactive search to clear the active search context or leave the REPL.
 - Use `x-search --session <name>` and `web-search --session <name>` to continue search workflows in the same named session.
 - Use `sessions show <name>` to print the saved local transcript for that named session, including models and token totals when available.
 - Use `sessions list --search <pattern> --model <model> --limit <n>` to filter larger local session archives.
@@ -150,6 +156,7 @@ node apps/cli/dist/bin.js mcp
 - Pipe stdin into any prompt command; piped content is appended after `--prompt` / `--prompt-file` with a blank line separator.
 - Stdin-only usage also works when you omit `--prompt` entirely and pipe the full prompt content in.
 - Interactive chat requires a TTY and does not combine with `--prompt`, `--prompt-file`, or piped stdin.
+- Interactive `x-search` and `web-search` also require a TTY and do not combine with prompt flags, piped stdin, `--json`, or `--no-store`.
 
 ## Diagnostics
 

@@ -1,8 +1,12 @@
 import { Command } from "commander";
 
+import {
+  executeXSearchTurn,
+  runInteractiveXSearch
+} from "../interactive-search.js";
+import { loadConversationState } from "../interactive-chat.js";
 import { renderStreamResult, renderTextResult } from "../output.js";
 import { readPipedStdin, resolvePromptInput } from "../prompt-input.js";
-import { createSessionHistoryEntry } from "../session-history.js";
 import type { CliDependencies } from "../types.js";
 
 export function createXSearchCommand(dependencies: CliDependencies): Command {
@@ -13,6 +17,7 @@ export function createXSearchCommand(dependencies: CliDependencies): Command {
     .option("--model <model>", "Override model")
     .option("--session <name>", "Continue or create a named local session")
     .option("--reset-session", "Reset the named session before sending the prompt")
+    .option("-i, --interactive", "Start an interactive X Search REPL")
     .option(
       "--previous-response-id <id>",
       "Continue from a previous xAI response id"
@@ -39,6 +44,35 @@ export function createXSearchCommand(dependencies: CliDependencies): Command {
         await dependencies.sessionStore.delete(options.session);
       }
 
+      if (options.interactive) {
+        if (options.store === false) {
+          throw new Error("--interactive cannot be used with --no-store");
+        }
+
+        if (options.json) {
+          throw new Error("--interactive cannot be used with --json");
+        }
+
+        if (options.prompt || options.promptFile) {
+          throw new Error("--interactive cannot be used with prompt input flags");
+        }
+
+        const stdinIsTTY = dependencies.stdinIsTTY ?? (() => process.stdin.isTTY ?? true);
+        if (!stdinIsTTY()) {
+          throw new Error("--interactive requires a TTY and cannot use piped stdin");
+        }
+
+        await runInteractiveXSearch({
+          dependencies,
+          sessionName: options.session,
+          model: options.model,
+          previousResponseId: options.previousResponseId,
+          allowedXHandles: options.allowHandle,
+          excludedXHandles: options.excludeHandle
+        });
+        return;
+      }
+
       const prompt = await resolvePromptInput({
         prompt: options.prompt,
         promptFile: options.promptFile,
@@ -47,49 +81,23 @@ export function createXSearchCommand(dependencies: CliDependencies): Command {
           readStdin: dependencies.readStdin
         })
       });
-
-      let existingSession = undefined;
-      let previousResponseId = options.previousResponseId as string | undefined;
-
-      if (!previousResponseId && options.session) {
-        existingSession = await dependencies.sessionStore.get(options.session);
-        previousResponseId = existingSession?.responseId;
-      } else if (options.session) {
-        existingSession = await dependencies.sessionStore.get(options.session);
-      }
-
-      let streamedText = "";
-      const result = await dependencies.service.xSearch({
-        prompt,
-        model: options.model,
-        previousResponseId,
-        store: options.session ? true : options.store,
-        allowedXHandles: options.allowHandle,
-        excludedXHandles: options.excludeHandle,
-        ...(options.stream
-          ? {
-              onTextDelta: async (chunk: string) => {
-                streamedText += chunk;
-                dependencies.writeStdoutRaw(chunk);
-              }
-            }
-          : {})
+      const state = await loadConversationState({
+        dependencies,
+        sessionName: options.session,
+        previousResponseId: options.previousResponseId
       });
-
-      const nextResponseId = result.responseId ?? existingSession?.responseId;
-
-      if (options.session && nextResponseId) {
-        const timestamp = new Date().toISOString();
-
-        await dependencies.sessionStore.set(options.session, {
-          responseId: nextResponseId,
-          updatedAt: timestamp,
-          history: [
-            ...(existingSession?.history ?? []),
-            createSessionHistoryEntry(prompt, result, timestamp)
-          ]
-        });
-      }
+      const { result, streamedText } = await executeXSearchTurn({
+        dependencies,
+        prompt,
+        state,
+        sessionName: options.session,
+        model: options.model,
+        previousResponseId: options.previousResponseId,
+        store: options.session ? true : options.store,
+        stream: options.stream,
+        allowedXHandles: options.allowHandle,
+        excludedXHandles: options.excludeHandle
+      });
 
       if (options.stream) {
         renderStreamResult(

@@ -3,7 +3,7 @@ import { Command } from "commander";
 
 import {
   executeChatTurn,
-  loadChatConversationState,
+  loadConversationState,
   runInteractiveChat
 } from "../interactive-chat.js";
 import { renderStreamResult, renderTextResult } from "../output.js";
@@ -93,7 +93,7 @@ export function createChatCommand(dependencies: CliDependencies): Command {
         stdinText
       });
       const resolvedImages = await resolveLocalImageInputs(options.image ?? []);
-      const state = await loadChatConversationState({
+      const state = await loadConversationState({
         dependencies,
         sessionName: options.session,
         previousResponseId: options.previousResponseId

@@ -17,7 +17,7 @@ import type {
   InteractiveConsole
 } from "./types.js";
 
-export interface ChatConversationState {
+export interface ConversationState {
   responseId?: string;
   history: SessionHistoryEntry[];
 }
@@ -25,7 +25,7 @@ export interface ChatConversationState {
 export interface ExecuteChatTurnOptions {
   dependencies: CliDependencies;
   prompt: string;
-  state: ChatConversationState;
+  state: ConversationState;
   sessionName?: string;
   system?: string;
   model?: string;
@@ -43,11 +43,11 @@ export interface InteractiveChatOptions {
   previousResponseId?: string;
 }
 
-export async function loadChatConversationState(options: {
+export async function loadConversationState(options: {
   dependencies: CliDependencies;
   sessionName?: string;
   previousResponseId?: string;
-}): Promise<ChatConversationState> {
+}): Promise<ConversationState> {
   const existingSession = options.sessionName
     ? await options.dependencies.sessionStore.get(options.sessionName)
     : undefined;
@@ -62,7 +62,7 @@ export async function executeChatTurn(
   options: ExecuteChatTurnOptions
 ): Promise<{
   result: GrokTextResult;
-  state: ChatConversationState;
+  state: ConversationState;
   streamedText: string;
 }> {
   const resolvedImages = options.images ?? [];
@@ -103,7 +103,7 @@ export async function executeChatTurn(
   });
 
   const timestamp = new Date().toISOString();
-  const nextState: ChatConversationState = {
+  const nextState: ConversationState = {
     responseId: result.responseId ?? options.state.responseId,
     history: [
       ...options.state.history,
@@ -143,7 +143,7 @@ export async function runInteractiveChat(
     append: async () => undefined
   };
 
-  let state = await loadChatConversationState({
+  let state = await loadConversationState({
     dependencies: options.dependencies,
     sessionName: options.sessionName,
     previousResponseId: options.previousResponseId
