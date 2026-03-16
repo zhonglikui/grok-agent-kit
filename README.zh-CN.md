@@ -59,6 +59,7 @@ npx -y grok-agent-kit chat --prompt "Stream a quick summary" --stream
 npx -y grok-agent-kit chat --session research --prompt "Summarize the latest Grok updates"
 npx -y grok-agent-kit chat --session research --prompt "Turn that into a release note draft"
 npx -y grok-agent-kit sessions show research
+npx -y grok-agent-kit sessions export research --format markdown
 npx -y grok-agent-kit x-search --prompt "Latest xAI posts" --stream
 npx -y grok-agent-kit web-search --prompt "Latest xAI docs" --stream
 npx -y grok-agent-kit x-search --session research --prompt "Latest xAI posts"
@@ -81,6 +82,7 @@ node apps/cli/dist/bin.js chat --prompt "Summarize Grok search"
 node apps/cli/dist/bin.js chat --prompt "Stream a local reply" --stream
 node apps/cli/dist/bin.js chat --session demo --prompt "Start a local-first conversation"
 node apps/cli/dist/bin.js sessions show demo
+node apps/cli/dist/bin.js sessions export demo --format markdown --output ./demo-session.md
 node apps/cli/dist/bin.js x-search --prompt "Find recent xAI posts" --stream
 node apps/cli/dist/bin.js web-search --prompt "Find updated xAI docs" --stream
 node apps/cli/dist/bin.js x-search --session demo --prompt "Find recent xAI posts"
@@ -98,10 +100,17 @@ node apps/cli/dist/bin.js mcp
 - 用 `chat --stream` 在 xAI 逐步返回内容时直接输出文本增量。
 - 用 `x-search --stream` 和 `web-search --stream` 流式输出搜索文本结果。
 - 用 `x-search --session <name>` 和 `web-search --session <name>` 在同一个命名会话里继续搜索工作流。
-- 用 `sessions show <name>` 打印该命名会话的本地转录记录。
+- 用 `sessions show <name>` 打印该命名会话的本地转录记录；如果有数据，也会显示模型和 token 汇总。
 - 用 `sessions list` 和 `sessions delete <name>` 管理本地会话元数据。
+- 用 `sessions export <name> --format markdown|json` 导出保存好的会话，便于分享、备份或后续处理。
 - MCP 客户端可在 `grok_chat`、`grok_x_search`、`grok_web_search` 中传入 `previousResponseId` 和 `store` 来显式续接上下文。
 - MCP 客户端可对 `grok_chat`、`grok_x_search`、`grok_web_search` 传入 `stream: true`，并请求 MCP progress 通知，以便从 `notifications/progress.params.message` 接收文本增量。
+
+## 导出会话
+
+- `sessions export <name> --format markdown` 会输出适合阅读的 Markdown 研究记录，包含时间、模型、引用来源和 usage 摘要。
+- `sessions export <name> --format json` 会输出规范化后的 JSON，便于备份或程序继续处理。
+- 加上 `--output <path>` 可以直接把导出结果写入文件。
 
 ## 诊断
 

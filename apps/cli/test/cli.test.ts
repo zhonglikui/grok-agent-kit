@@ -1,6 +1,18 @@
-import { describe, expect, it, vi } from "vitest";
+import { mkdtempSync, readFileSync, rmSync } from "node:fs";
+import { tmpdir } from "node:os";
+import { join } from "node:path";
+
+import { afterEach, describe, expect, it, vi } from "vitest";
 
 import { buildCli } from "../src/index.js";
+
+const tempDirectories: string[] = [];
+
+afterEach(() => {
+  for (const directory of tempDirectories.splice(0)) {
+    rmSync(directory, { recursive: true, force: true });
+  }
+});
 
 describe("CLI", () => {
   it("dispatches the chat command to the service", async () => {
@@ -479,7 +491,17 @@ describe("CLI", () => {
     const service = {
       chat: vi.fn().mockResolvedValue({
         text: "continued output",
-        citations: [],
+        model: "grok-4",
+        citations: [
+          {
+            url: "https://docs.x.ai"
+          }
+        ],
+        usage: {
+          promptTokens: 12,
+          completionTokens: 8,
+          totalTokens: 20
+        },
         responseId: "resp_next"
       }),
       xSearch: vi.fn(),
@@ -496,7 +518,8 @@ describe("CLI", () => {
             prompt: "Earlier prompt",
             responseText: "Earlier response",
             responseId: "resp_prev",
-            createdAt: "2026-03-15T00:00:00.000Z"
+            createdAt: "2026-03-15T00:00:00.000Z",
+            citations: []
           }
         ]
       }),
@@ -539,7 +562,18 @@ describe("CLI", () => {
           expect.objectContaining({
             prompt: "Continue",
             responseText: "continued output",
-            responseId: "resp_next"
+            responseId: "resp_next",
+            model: "grok-4",
+            citations: [
+              {
+                url: "https://docs.x.ai"
+              }
+            ],
+            usage: {
+              promptTokens: 12,
+              completionTokens: 8,
+              totalTokens: 20
+            }
           })
         ])
       })
@@ -605,7 +639,18 @@ describe("CLI", () => {
             prompt: "Hello",
             responseText: "Hi there",
             responseId: "resp_alpha",
-            createdAt: "2026-03-16T02:00:00.000Z"
+            createdAt: "2026-03-16T02:00:00.000Z",
+            model: "grok-4",
+            citations: [
+              {
+                url: "https://docs.x.ai"
+              }
+            ],
+            usage: {
+              promptTokens: 10,
+              completionTokens: 30,
+              totalTokens: 40
+            }
           }
         ]
       }),
@@ -638,6 +683,227 @@ describe("CLI", () => {
 
     expect(stdout[0]).toContain("Hello");
     expect(stdout[0]).toContain("Hi there");
+    expect(stdout[0]).toContain("Models: grok-4");
+    expect(stdout[0]).toContain("Total tokens: 40");
+    expect(stdout[0]).toContain("(grok-4)");
+  });
+
+  it("exports a saved session as markdown", async () => {
+    const stdout: string[] = [];
+    const sessionStore = {
+      get: vi.fn().mockResolvedValue({
+        name: "alpha",
+        responseId: "resp_alpha",
+        updatedAt: "2026-03-16T02:00:00.000Z",
+        history: [
+          {
+            prompt: "Hello",
+            responseText: "Hi there",
+            responseId: "resp_alpha",
+            createdAt: "2026-03-16T02:00:00.000Z",
+            model: "grok-4",
+            citations: [
+              {
+                url: "https://docs.x.ai"
+              }
+            ],
+            usage: {
+              promptTokens: 10,
+              completionTokens: 30,
+              totalTokens: 40
+            }
+          }
+        ]
+      }),
+      list: vi.fn(),
+      set: vi.fn(),
+      delete: vi.fn()
+    };
+
+    const cli = buildCli({
+      service: {
+        chat: vi.fn(),
+        xSearch: vi.fn(),
+        webSearch: vi.fn(),
+        models: vi.fn()
+      },
+      sessionStore,
+      startMcpServer: vi.fn(),
+      writeStdout: (value) => stdout.push(value),
+      writeStdoutRaw: (value) => stdout.push(value),
+      writeStderr: vi.fn()
+    });
+
+    await cli.parseAsync([
+      "node",
+      "grok-agent-kit",
+      "sessions",
+      "export",
+      "alpha",
+      "--format",
+      "markdown"
+    ]);
+
+    expect(stdout[0]).toContain("# Session: alpha");
+    expect(stdout[0]).toContain("Total tokens: 40");
+    expect(stdout[0]).toContain("## Turn 1");
+    expect(stdout[0]).toContain("https://docs.x.ai");
+  });
+
+  it("exports a saved session as json", async () => {
+    const stdout: string[] = [];
+    const sessionStore = {
+      get: vi.fn().mockResolvedValue({
+        name: "alpha",
+        responseId: "resp_alpha",
+        updatedAt: "2026-03-16T02:00:00.000Z",
+        history: [
+          {
+            prompt: "Hello",
+            responseText: "Hi there",
+            responseId: "resp_alpha",
+            createdAt: "2026-03-16T02:00:00.000Z",
+            model: "grok-4",
+            citations: [],
+            usage: {
+              totalTokens: 40
+            }
+          }
+        ]
+      }),
+      list: vi.fn(),
+      set: vi.fn(),
+      delete: vi.fn()
+    };
+
+    const cli = buildCli({
+      service: {
+        chat: vi.fn(),
+        xSearch: vi.fn(),
+        webSearch: vi.fn(),
+        models: vi.fn()
+      },
+      sessionStore,
+      startMcpServer: vi.fn(),
+      writeStdout: (value) => stdout.push(value),
+      writeStdoutRaw: (value) => stdout.push(value),
+      writeStderr: vi.fn()
+    });
+
+    await cli.parseAsync([
+      "node",
+      "grok-agent-kit",
+      "sessions",
+      "export",
+      "alpha",
+      "--format",
+      "json"
+    ]);
+
+    expect(JSON.parse(stdout[0] ?? "{}")).toEqual(
+      expect.objectContaining({
+        name: "alpha",
+        history: expect.arrayContaining([
+          expect.objectContaining({
+            model: "grok-4",
+            usage: expect.objectContaining({
+              totalTokens: 40
+            })
+          })
+        ])
+      })
+    );
+  });
+
+  it("writes an exported session to a file", async () => {
+    const directory = mkdtempSync(join(tmpdir(), "grok-agent-kit-export-"));
+    tempDirectories.push(directory);
+    const outputPath = join(directory, "alpha.md");
+    const stdout: string[] = [];
+    const sessionStore = {
+      get: vi.fn().mockResolvedValue({
+        name: "alpha",
+        responseId: "resp_alpha",
+        updatedAt: "2026-03-16T02:00:00.000Z",
+        history: [
+          {
+            prompt: "Hello",
+            responseText: "Hi there",
+            responseId: "resp_alpha",
+            createdAt: "2026-03-16T02:00:00.000Z",
+            citations: []
+          }
+        ]
+      }),
+      list: vi.fn(),
+      set: vi.fn(),
+      delete: vi.fn()
+    };
+
+    const cli = buildCli({
+      service: {
+        chat: vi.fn(),
+        xSearch: vi.fn(),
+        webSearch: vi.fn(),
+        models: vi.fn()
+      },
+      sessionStore,
+      startMcpServer: vi.fn(),
+      writeStdout: (value) => stdout.push(value),
+      writeStdoutRaw: (value) => stdout.push(value),
+      writeStderr: vi.fn()
+    });
+
+    await cli.parseAsync([
+      "node",
+      "grok-agent-kit",
+      "sessions",
+      "export",
+      "alpha",
+      "--format",
+      "markdown",
+      "--output",
+      outputPath
+    ]);
+
+    expect(readFileSync(outputPath, "utf8")).toContain("# Session: alpha");
+    expect(stdout[0]).toContain(outputPath);
+  });
+
+  it("reports when exporting a missing session", async () => {
+    const stdout: string[] = [];
+    const sessionStore = {
+      get: vi.fn().mockResolvedValue(undefined),
+      list: vi.fn(),
+      set: vi.fn(),
+      delete: vi.fn()
+    };
+
+    const cli = buildCli({
+      service: {
+        chat: vi.fn(),
+        xSearch: vi.fn(),
+        webSearch: vi.fn(),
+        models: vi.fn()
+      },
+      sessionStore,
+      startMcpServer: vi.fn(),
+      writeStdout: (value) => stdout.push(value),
+      writeStdoutRaw: (value) => stdout.push(value),
+      writeStderr: vi.fn()
+    });
+
+    await cli.parseAsync([
+      "node",
+      "grok-agent-kit",
+      "sessions",
+      "export",
+      "missing",
+      "--format",
+      "markdown"
+    ]);
+
+    expect(stdout[0]).toContain("Session missing not found.");
   });
 
   it("streams chat output incrementally when --stream is used", async () => {

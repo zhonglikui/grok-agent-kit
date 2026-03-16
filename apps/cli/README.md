@@ -13,6 +13,7 @@ npx -y grok-agent-kit chat --prompt "Stream a quick summary" --stream
 npx -y grok-agent-kit chat --session notes --prompt "Start a persistent CLI session"
 npx -y grok-agent-kit chat --session notes --prompt "Continue that session"
 npx -y grok-agent-kit sessions show notes
+npx -y grok-agent-kit sessions export notes --format markdown --output ./notes.md
 npx -y grok-agent-kit x-search --prompt "Latest xAI posts" --stream
 npx -y grok-agent-kit web-search --prompt "Latest xAI docs" --stream
 npx -y grok-agent-kit x-search --session notes --prompt "Latest xAI posts"
@@ -50,9 +51,11 @@ The CLI retries transient rate-limit, timeout, and `5xx` failures by default so 
 - `x-search --stream` and `web-search --stream` stream search text as it arrives
 - `x-search --session <name>` and `web-search --session <name>` reuse the same local session continuity
 - `chat --previous-response-id <id>` continues from a raw xAI response id
-- `sessions show <name>` prints the saved local transcript for a session
+- `sessions show <name>` prints the saved local transcript for a session, including models and token totals when available
 - `sessions list` shows saved sessions
 - `sessions delete <name>` removes a saved session record
+- `sessions export <name> --format markdown|json` exports a saved session to stdout
+- `sessions export <name> --format markdown|json --output <path>` writes the export directly to a file
 
 ## Supported surfaces
 

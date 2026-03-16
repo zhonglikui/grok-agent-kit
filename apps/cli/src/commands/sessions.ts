@@ -1,5 +1,9 @@
+import { mkdir, writeFile } from "node:fs/promises";
+import { dirname, resolve } from "node:path";
+
 import { Command } from "commander";
 
+import type { SessionHistoryEntry, SessionRecord } from "../session-store.js";
 import type { CliDependencies } from "../types.js";
 
 export function createSessionsCommand(dependencies: CliDependencies): Command {
@@ -55,26 +59,252 @@ export function createSessionsCommand(dependencies: CliDependencies): Command {
         return;
       }
 
-      if (session.history.length === 0) {
-        dependencies.writeStdout(
-          `${session.name}\nLast response: ${session.responseId}\nUpdated: ${session.updatedAt}\n\nNo local history recorded yet.`
-        );
+      dependencies.writeStdout(renderSessionTranscript(session));
+    });
+
+  command
+    .command("export")
+    .description("Export a saved local chat session")
+    .argument("<name>", "Session name")
+    .requiredOption("--format <format>", "Export format: markdown or json")
+    .option("--output <path>", "Write export output to a file instead of stdout")
+    .action(async (name: string, options) => {
+      const session = await dependencies.sessionStore.get(name);
+
+      if (!session) {
+        dependencies.writeStdout(`Session ${name} not found.`);
         return;
       }
 
-      const transcript = session.history
-        .map(
-          (entry) =>
-            `[${entry.createdAt}]\nUser: ${entry.prompt}\nAssistant: ${entry.responseText}${
-              entry.responseId ? `\nResponse ID: ${entry.responseId}` : ""
-            }`
-        )
-        .join("\n\n");
+      const format = normalizeExportFormat(options.format);
+      const output =
+        format === "json"
+          ? JSON.stringify(session, null, 2)
+          : renderSessionMarkdown(session);
 
-      dependencies.writeStdout(
-        `${session.name}\nLast response: ${session.responseId}\nUpdated: ${session.updatedAt}\n\n${transcript}`
-      );
+      if (options.output) {
+        const outputPath = resolve(options.output);
+        await mkdir(dirname(outputPath), { recursive: true });
+        await writeFile(outputPath, output, "utf8");
+        dependencies.writeStdout(`Exported session ${name} to ${outputPath}`);
+        return;
+      }
+
+      dependencies.writeStdout(output);
     });
 
   return command;
+}
+
+type SessionExportFormat = "json" | "markdown";
+
+function normalizeExportFormat(value: string): SessionExportFormat {
+  if (value === "json" || value === "markdown") {
+    return value;
+  }
+
+  throw new Error(`Unsupported export format: ${value}`);
+}
+
+function renderSessionTranscript(session: SessionRecord): string {
+  const header = renderSessionHeader(session);
+
+  if (session.history.length === 0) {
+    return `${header}\n\nNo local history recorded yet.`;
+  }
+
+  const transcript = session.history.map(renderHistoryEntry).join("\n\n");
+  return `${header}\n\n${transcript}`;
+}
+
+function renderSessionMarkdown(session: SessionRecord): string {
+  const summary = summarizeSession(session);
+  const lines = [
+    `# Session: ${session.name}`,
+    "",
+    `- Updated: ${session.updatedAt}`,
+    `- Last response: ${session.responseId}`,
+    `- Entries: ${summary.entryCount}`,
+    ...(summary.models.length > 0
+      ? [
+          `- Models: ${summary.models.join(", ")}`
+        ]
+      : []),
+    ...(summary.totalTokens !== undefined
+      ? [
+          `- Total tokens: ${summary.totalTokens}`
+        ]
+      : [])
+  ];
+
+  for (const [index, entry] of session.history.entries()) {
+    lines.push("");
+    lines.push(`## Turn ${index + 1}`);
+    lines.push("");
+    lines.push(`- Timestamp: ${entry.createdAt}`);
+
+    if (entry.model) {
+      lines.push(`- Model: ${entry.model}`);
+    }
+
+    if (entry.responseId) {
+      lines.push(`- Response ID: ${entry.responseId}`);
+    }
+
+    if (entry.usage) {
+      lines.push(...renderMarkdownUsage(entry.usage));
+    }
+
+    lines.push("");
+    lines.push("### Prompt");
+    lines.push("");
+    lines.push(entry.prompt);
+    lines.push("");
+    lines.push("### Response");
+    lines.push("");
+    lines.push(entry.responseText);
+
+    if (entry.citations.length > 0) {
+      lines.push("");
+      lines.push("### Citations");
+      lines.push("");
+
+      for (const citation of entry.citations) {
+        lines.push(`- ${citation.url ?? JSON.stringify(citation)}`);
+      }
+    }
+  }
+
+  return lines.join("\n");
+}
+
+function renderSessionHeader(session: SessionRecord): string {
+  const summary = summarizeSession(session);
+  const lines = [
+    session.name,
+    `Last response: ${session.responseId}`,
+    `Updated: ${session.updatedAt}`,
+    `Entries: ${summary.entryCount}`
+  ];
+
+  if (summary.models.length > 0) {
+    lines.push(`Models: ${summary.models.join(", ")}`);
+  }
+
+  if (summary.totalTokens !== undefined) {
+    lines.push(`Total tokens: ${summary.totalTokens}`);
+  }
+
+  return lines.join("\n");
+}
+
+function renderHistoryEntry(entry: SessionHistoryEntry): string {
+  const lines = [
+    `[${entry.createdAt}]${entry.model ? ` (${entry.model})` : ""}`,
+    `User: ${entry.prompt}`,
+    `Assistant: ${entry.responseText}`
+  ];
+
+  if (entry.responseId) {
+    lines.push(`Response ID: ${entry.responseId}`);
+  }
+
+  const usageSummary = renderUsageSummary(entry);
+  if (usageSummary) {
+    lines.push(`Usage: ${usageSummary}`);
+  }
+
+  if (entry.citations.length > 0) {
+    lines.push("Sources:");
+
+    for (const citation of entry.citations) {
+      lines.push(`- ${citation.url ?? JSON.stringify(citation)}`);
+    }
+  }
+
+  return lines.join("\n");
+}
+
+function summarizeSession(session: SessionRecord) {
+  const models = Array.from(
+    new Set(
+      session.history
+        .map((entry) => entry.model)
+        .filter((value): value is string => Boolean(value))
+    )
+  );
+  const totalTokens = session.history.reduce((sum, entry) => {
+    return sum + (entry.usage?.totalTokens ?? 0);
+  }, 0);
+
+  return {
+    entryCount: session.history.length,
+    models,
+    totalTokens: totalTokens > 0 ? totalTokens : undefined
+  };
+}
+
+function renderUsageSummary(entry: SessionHistoryEntry): string | undefined {
+  if (!entry.usage) {
+    return undefined;
+  }
+
+  const parts = [
+    entry.usage.promptTokens !== undefined
+      ? `prompt ${entry.usage.promptTokens}`
+      : undefined,
+    entry.usage.completionTokens !== undefined
+      ? `completion ${entry.usage.completionTokens}`
+      : undefined,
+    entry.usage.totalTokens !== undefined
+      ? `total ${entry.usage.totalTokens}`
+      : undefined,
+    entry.usage.reasoningTokens !== undefined
+      ? `reasoning ${entry.usage.reasoningTokens}`
+      : undefined,
+    entry.usage.cachedTokens !== undefined
+      ? `cached ${entry.usage.cachedTokens}`
+      : undefined,
+    entry.usage.numSourcesUsed !== undefined
+      ? `sources ${entry.usage.numSourcesUsed}`
+      : undefined
+  ].filter((value): value is string => Boolean(value));
+
+  return parts.length > 0 ? parts.join(", ") : undefined;
+}
+
+function renderMarkdownUsage(
+  usage: NonNullable<SessionHistoryEntry["usage"]>
+): string[] {
+  const lines: string[] = [];
+
+  if (usage.promptTokens !== undefined) {
+    lines.push(`- Prompt tokens: ${usage.promptTokens}`);
+  }
+
+  if (usage.completionTokens !== undefined) {
+    lines.push(`- Completion tokens: ${usage.completionTokens}`);
+  }
+
+  if (usage.totalTokens !== undefined) {
+    lines.push(`- Total tokens: ${usage.totalTokens}`);
+  }
+
+  if (usage.reasoningTokens !== undefined) {
+    lines.push(`- Reasoning tokens: ${usage.reasoningTokens}`);
+  }
+
+  if (usage.cachedTokens !== undefined) {
+    lines.push(`- Cached tokens: ${usage.cachedTokens}`);
+  }
+
+  if (usage.numSourcesUsed !== undefined) {
+    lines.push(`- Sources used: ${usage.numSourcesUsed}`);
+  }
+
+  if (usage.costUsdMillionths !== undefined) {
+    lines.push(`- Cost (USD millionths): ${usage.costUsdMillionths}`);
+  }
+
+  return lines;
 }

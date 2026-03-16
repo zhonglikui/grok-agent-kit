@@ -39,11 +39,22 @@ export interface ChatOptions extends BasePromptOptions {
   >;
 }
 
+export interface GrokTextUsage {
+  promptTokens?: number;
+  completionTokens?: number;
+  totalTokens?: number;
+  cachedTokens?: number;
+  reasoningTokens?: number;
+  numSourcesUsed?: number;
+  costUsdMillionths?: number;
+}
+
 export interface GrokTextResult {
   text: string;
   responseId?: string;
   model?: string;
   citations: XaiCitation[];
+  usage?: GrokTextUsage;
   raw?: unknown;
 }
 

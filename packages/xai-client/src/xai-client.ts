@@ -318,7 +318,11 @@ export class XaiClient implements XaiTransportLike {
         : undefined,
       output: Array.isArray(lastPayload?.output)
         ? (lastPayload.output as unknown[])
-        : undefined
+        : undefined,
+      usage:
+        lastPayload?.usage && typeof lastPayload.usage === "object"
+          ? (lastPayload.usage as XaiResponse["usage"])
+          : undefined
     };
   }
 

@@ -2,6 +2,8 @@ import { mkdir, readFile, writeFile } from "node:fs/promises";
 import { homedir } from "node:os";
 import { dirname, join } from "node:path";
 
+import type { GrokTextUsage } from "@grok-agent-kit/core";
+
 export interface SessionRecord {
   name: string;
   responseId: string;
@@ -9,11 +11,19 @@ export interface SessionRecord {
   history: SessionHistoryEntry[];
 }
 
+export interface SessionCitation {
+  url?: string;
+  [key: string]: unknown;
+}
+
 export interface SessionHistoryEntry {
   prompt: string;
   responseText: string;
   responseId?: string;
   createdAt: string;
+  model?: string;
+  citations: SessionCitation[];
+  usage?: GrokTextUsage;
 }
 
 export interface SessionStore {
@@ -114,6 +124,9 @@ function toSessionRecord(
     name,
     responseId: record.responseId,
     updatedAt: record.updatedAt,
-    history: record.history ?? []
+    history: (record.history ?? []).map((entry) => ({
+      ...entry,
+      citations: entry.citations ?? []
+    }))
   };
 }

@@ -260,4 +260,52 @@ describe("GrokService", () => {
       }
     ]);
   });
+
+  it("maps normalized usage metadata from xAI responses", async () => {
+    const client = {
+      responses: {
+        create: vi.fn().mockResolvedValue({
+          id: "resp_usage",
+          model: "grok-4",
+          output_text: "usage reply",
+          citations: [],
+          usage: {
+            input_tokens: 12,
+            output_tokens: 34,
+            total_tokens: 46,
+            input_tokens_details: {
+              cached_tokens: 3
+            },
+            output_tokens_details: {
+              reasoning_tokens: 5
+            },
+            num_sources_used: 2,
+            cost_usd_millionths: 120
+          }
+        })
+      },
+      models: {
+        list: vi.fn()
+      }
+    };
+
+    const service = new GrokService({
+      client,
+      defaultModel: "grok-4"
+    });
+
+    const result = await service.chat({
+      prompt: "Show usage"
+    });
+
+    expect(result.usage).toEqual({
+      promptTokens: 12,
+      completionTokens: 34,
+      totalTokens: 46,
+      cachedTokens: 3,
+      reasoningTokens: 5,
+      numSourcesUsed: 2,
+      costUsdMillionths: 120
+    });
+  });
 });

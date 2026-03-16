@@ -60,6 +60,7 @@ npx -y grok-agent-kit chat --prompt "Stream a quick summary" --stream
 npx -y grok-agent-kit chat --session research --prompt "Summarize the latest Grok updates"
 npx -y grok-agent-kit chat --session research --prompt "Turn that into a release note draft"
 npx -y grok-agent-kit sessions show research
+npx -y grok-agent-kit sessions export research --format markdown
 npx -y grok-agent-kit x-search --prompt "Latest xAI posts" --stream
 npx -y grok-agent-kit web-search --prompt "Latest xAI docs" --stream
 npx -y grok-agent-kit x-search --session research --prompt "Latest xAI posts"
@@ -82,6 +83,7 @@ node apps/cli/dist/bin.js chat --prompt "Summarize Grok search"
 node apps/cli/dist/bin.js chat --prompt "Stream a local reply" --stream
 node apps/cli/dist/bin.js chat --session demo --prompt "Start a local-first conversation"
 node apps/cli/dist/bin.js sessions show demo
+node apps/cli/dist/bin.js sessions export demo --format markdown --output ./demo-session.md
 node apps/cli/dist/bin.js x-search --prompt "Find recent xAI posts" --stream
 node apps/cli/dist/bin.js web-search --prompt "Find updated xAI docs" --stream
 node apps/cli/dist/bin.js x-search --session demo --prompt "Find recent xAI posts"
@@ -99,10 +101,17 @@ node apps/cli/dist/bin.js mcp
 - Use `chat --stream` to print chat text incrementally as xAI sends deltas.
 - Use `x-search --stream` and `web-search --stream` to stream search text incrementally.
 - Use `x-search --session <name>` and `web-search --session <name>` to continue search workflows in the same named session.
-- Use `sessions show <name>` to print the saved local transcript for that named session.
+- Use `sessions show <name>` to print the saved local transcript for that named session, including models and token totals when available.
 - Use `sessions list` and `sessions delete <name>` to manage local session metadata.
+- Use `sessions export <name> --format markdown|json` to export a saved session for sharing, backup, or downstream tooling.
 - MCP clients can pass `previousResponseId` and `store` to `grok_chat`, `grok_x_search`, and `grok_web_search` when they want explicit continuity.
 - MCP clients can pass `stream: true` to `grok_chat`, `grok_x_search`, and `grok_web_search`, then request MCP progress notifications to receive text deltas in `notifications/progress.params.message`.
+
+## Exporting sessions
+
+- `sessions export <name> --format markdown` prints a human-friendly research transcript with timestamps, models, citations, and usage summaries.
+- `sessions export <name> --format json` prints normalized session JSON for backups or programmatic reuse.
+- Add `--output <path>` to write the export directly to a file.
 
 ## Diagnostics
 

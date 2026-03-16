@@ -1,6 +1,7 @@
 import { Command } from "commander";
 
 import { renderStreamResult, renderTextResult } from "../output.js";
+import { createSessionHistoryEntry } from "../session-history.js";
 import type { CliDependencies } from "../types.js";
 
 export function createChatCommand(dependencies: CliDependencies): Command {
@@ -71,12 +72,7 @@ export function createChatCommand(dependencies: CliDependencies): Command {
           updatedAt: timestamp,
           history: [
             ...(existingSession?.history ?? []),
-            {
-              prompt: options.prompt,
-              responseText: result.text,
-              responseId: result.responseId,
-              createdAt: timestamp
-            }
+            createSessionHistoryEntry(options.prompt, result, timestamp)
           ]
         });
       }

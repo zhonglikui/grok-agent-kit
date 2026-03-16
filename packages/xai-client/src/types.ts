@@ -35,12 +35,34 @@ export interface XaiCitation {
   [key: string]: unknown;
 }
 
+export interface XaiInputTokensDetails {
+  cached_tokens?: number;
+  [key: string]: unknown;
+}
+
+export interface XaiOutputTokensDetails {
+  reasoning_tokens?: number;
+  [key: string]: unknown;
+}
+
+export interface XaiUsage {
+  input_tokens?: number;
+  output_tokens?: number;
+  total_tokens?: number;
+  input_tokens_details?: XaiInputTokensDetails;
+  output_tokens_details?: XaiOutputTokensDetails;
+  num_sources_used?: number;
+  cost_usd_millionths?: number;
+  [key: string]: unknown;
+}
+
 export interface XaiResponse {
   id: string;
   model?: string;
   output_text?: string;
   citations?: Array<string | XaiCitation>;
   output?: unknown[];
+  usage?: XaiUsage;
   [key: string]: unknown;
 }
 

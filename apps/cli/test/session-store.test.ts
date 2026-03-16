@@ -92,7 +92,18 @@ describe("createFileSessionStore", () => {
           prompt: "Hello",
           responseText: "Hi there",
           responseId: "resp_123",
-          createdAt: "2026-03-16T00:00:00.000Z"
+          createdAt: "2026-03-16T00:00:00.000Z",
+          model: "grok-4",
+          citations: [
+            {
+              url: "https://docs.x.ai"
+            }
+          ],
+          usage: {
+            promptTokens: 10,
+            completionTokens: 20,
+            totalTokens: 30
+          }
         }
       ]
     });
@@ -106,7 +117,18 @@ describe("createFileSessionStore", () => {
           prompt: "Hello",
           responseText: "Hi there",
           responseId: "resp_123",
-          createdAt: "2026-03-16T00:00:00.000Z"
+          createdAt: "2026-03-16T00:00:00.000Z",
+          model: "grok-4",
+          citations: [
+            {
+              url: "https://docs.x.ai"
+            }
+          ],
+          usage: {
+            promptTokens: 10,
+            completionTokens: 20,
+            totalTokens: 30
+          }
         }
       ]
     });
@@ -137,6 +159,50 @@ describe("createFileSessionStore", () => {
       responseId: "resp_legacy",
       updatedAt: "2026-03-16T00:00:00.000Z",
       history: []
+    });
+  });
+
+  it("normalizes older history entries without metadata fields", async () => {
+    const directory = mkdtempSync(join(tmpdir(), "grok-agent-kit-session-store-"));
+    tempDirectories.push(directory);
+    writeFileSync(
+      join(directory, "sessions.json"),
+      JSON.stringify({
+        sessions: {
+          legacy: {
+            responseId: "resp_legacy",
+            updatedAt: "2026-03-16T00:00:00.000Z",
+            history: [
+              {
+                prompt: "Hello",
+                responseText: "Hi there",
+                responseId: "resp_legacy",
+                createdAt: "2026-03-16T00:00:00.000Z"
+              }
+            ]
+          }
+        }
+      }),
+      "utf8"
+    );
+
+    const store = createFileSessionStore({
+      baseDirectory: directory
+    });
+
+    await expect(store.get("legacy")).resolves.toEqual({
+      name: "legacy",
+      responseId: "resp_legacy",
+      updatedAt: "2026-03-16T00:00:00.000Z",
+      history: [
+        {
+          prompt: "Hello",
+          responseText: "Hi there",
+          responseId: "resp_legacy",
+          createdAt: "2026-03-16T00:00:00.000Z",
+          citations: []
+        }
+      ]
     });
   });
 });

@@ -12,6 +12,7 @@ import type {
   GrokModelsResult,
   GrokServiceOptions,
   GrokTextResult,
+  GrokTextUsage,
   WebSearchOptions,
   XSearchOptions
 } from "./types.js";
@@ -213,6 +214,7 @@ export class GrokService {
       responseId: response.id,
       model: response.model,
       citations: this.normalizeCitations(response.citations),
+      usage: this.normalizeUsage(response.usage),
       ...(includeRaw ? { raw: response } : {})
     };
   }
@@ -261,5 +263,37 @@ export class GrokService {
     return citations.map((citation) =>
       typeof citation === "string" ? { url: citation } : citation
     );
+  }
+
+  private normalizeUsage(usage?: XaiResponse["usage"]): GrokTextUsage | undefined {
+    if (!usage) {
+      return undefined;
+    }
+
+    const normalizedUsage: GrokTextUsage = {
+      ...(usage.input_tokens !== undefined
+        ? { promptTokens: usage.input_tokens }
+        : {}),
+      ...(usage.output_tokens !== undefined
+        ? { completionTokens: usage.output_tokens }
+        : {}),
+      ...(usage.total_tokens !== undefined
+        ? { totalTokens: usage.total_tokens }
+        : {}),
+      ...(usage.input_tokens_details?.cached_tokens !== undefined
+        ? { cachedTokens: usage.input_tokens_details.cached_tokens }
+        : {}),
+      ...(usage.output_tokens_details?.reasoning_tokens !== undefined
+        ? { reasoningTokens: usage.output_tokens_details.reasoning_tokens }
+        : {}),
+      ...(usage.num_sources_used !== undefined
+        ? { numSourcesUsed: usage.num_sources_used }
+        : {}),
+      ...(usage.cost_usd_millionths !== undefined
+        ? { costUsdMillionths: usage.cost_usd_millionths }
+        : {})
+    };
+
+    return Object.keys(normalizedUsage).length > 0 ? normalizedUsage : undefined;
   }
 }

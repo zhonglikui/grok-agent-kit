@@ -276,4 +276,62 @@ describe("XaiClient", () => {
       })
     );
   });
+
+  it("preserves usage metadata from the final streaming response", async () => {
+    const encoder = new TextEncoder();
+    const fetchMock = vi.fn().mockResolvedValue(
+      new Response(
+        new ReadableStream({
+          start(controller) {
+            controller.enqueue(
+              encoder.encode(
+                'data: {"type":"response.output_text.delta","delta":"Hello"}\n\n'
+              )
+            );
+            controller.enqueue(
+              encoder.encode(
+                'data: {"type":"response.completed","response":{"id":"resp_stream_usage","model":"grok-4","output_text":"Hello","citations":[],"usage":{"input_tokens":12,"output_tokens":7,"total_tokens":19,"input_tokens_details":{"cached_tokens":2},"output_tokens_details":{"reasoning_tokens":1},"num_sources_used":1,"cost_usd_millionths":42}}}\n\n'
+              )
+            );
+            controller.enqueue(encoder.encode("data: [DONE]\n\n"));
+            controller.close();
+          }
+        }),
+        {
+          status: 200,
+          headers: {
+            "content-type": "text/event-stream"
+          }
+        }
+      )
+    );
+
+    const client = new XaiClient({
+      apiKey: "test-key",
+      baseUrl: "https://api.x.ai/v1",
+      fetch: fetchMock
+    });
+
+    const response = await client.responses.create(
+      {
+        model: "grok-4",
+        input: "Stream usage please",
+        stream: true
+      },
+      {
+        onTextDelta: vi.fn()
+      }
+    );
+
+    expect(response).toEqual(
+      expect.objectContaining({
+        id: "resp_stream_usage",
+        usage: expect.objectContaining({
+          input_tokens: 12,
+          output_tokens: 7,
+          total_tokens: 19
+        })
+      })
+    );
+  });
 });
