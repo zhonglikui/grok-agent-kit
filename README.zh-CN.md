@@ -157,12 +157,14 @@ node apps/cli/dist/bin.js mcp
 - 用 `chat --interactive --session <name>` 在终端 REPL 中恢复并自动保存同一个命名本地会话。
 - 用 `chat --reset-session --session <name>` 重置并重新开始该命名会话。
 - 用 `chat --image <path>` 一次或多次附加本地 PNG 或 JPEG 图片。
+- 交互式 chat 启动时会先打印一行命令提示，也可随时用 `/help` 重新查看可用的 slash 命令。
 - 在交互式 chat 中，可用 `/image <path>` 为下一条用户消息临时排队一张本地 PNG 或 JPEG 图片。
 - 在交互式 chat 中，可用 `/reset` 清空当前对话；如果绑定了命名会话，也会删除对应的本地会话记录。
 - 在交互式 chat 中，可用 `/exit` 干净退出 REPL。
 - 用 `chat --stream` 在 xAI 逐步返回内容时直接输出文本增量。
 - 用 `x-search --stream` 和 `web-search --stream` 流式输出搜索文本结果。
 - 用 `x-search --interactive` 和 `web-search --interactive` 在终端里进入可连续追问的搜索 REPL。
+- 交互式 search 启动时也会先打印一行命令提示，也可随时用 `/help` 重新查看可用的 slash 命令。
 - 在交互式 search 中，可用 `/reset` 清空当前搜索上下文，也可用 `/exit` 退出 REPL。
 - 用 `x-search --session <name>` 和 `web-search --session <name>` 在同一个命名会话里继续搜索工作流。
 - 用 `sessions show <name>` 打印该命名会话的本地转录记录；如果有数据，也会显示模型和 token 汇总。

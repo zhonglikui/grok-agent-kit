@@ -77,6 +77,7 @@ For local development mode, point `--project-path` at your clone root so the gen
 
 - `chat --session <name>` continues a named local session
 - `chat --reset-session --session <name>` resets that session before sending the new prompt
+- interactive `chat`, `x-search`, and `web-search` print a one-line startup hint and support `/help` for reprinting the available slash commands
 - `chat --stream` writes response text incrementally as it arrives
 - `x-search --stream` and `web-search --stream` stream search text as it arrives
 - `x-search --session <name>` and `web-search --session <name>` reuse the same local session continuity

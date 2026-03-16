@@ -43,6 +43,13 @@ export interface InteractiveChatOptions {
   previousResponseId?: string;
 }
 
+const INTERACTIVE_CHAT_STARTUP_HINT =
+  "Interactive chat ready. Commands: /help, /image <path>, /reset, /exit.";
+const INTERACTIVE_CHAT_HELP =
+  "Commands: /help shows this message; /image <path> queues local images; /reset clears the current conversation; /exit leaves interactive mode.";
+const INTERACTIVE_CHAT_UNKNOWN_COMMAND =
+  "Unknown command. Use /help, /image <path>, /reset, or /exit.";
+
 export async function loadConversationState(options: {
   dependencies: CliDependencies;
   sessionName?: string;
@@ -152,6 +159,7 @@ export async function runInteractiveChat(
 
   try {
     interactiveConsole.setHistory(await replHistoryStore.load());
+    options.dependencies.writeStdout(INTERACTIVE_CHAT_STARTUP_HINT);
 
     while (true) {
       const line = await interactiveConsole.prompt("grok> ");
@@ -181,6 +189,11 @@ export async function runInteractiveChat(
         continue;
       }
 
+      if (trimmedLine === "/help") {
+        options.dependencies.writeStdout(INTERACTIVE_CHAT_HELP);
+        continue;
+      }
+
       if (trimmedLine.startsWith("/image")) {
         const imagePath = trimmedLine.slice("/image".length).trim();
         if (!imagePath) {
@@ -202,9 +215,7 @@ export async function runInteractiveChat(
       }
 
       if (trimmedLine.startsWith("/")) {
-        options.dependencies.writeStderr(
-          "Unknown command. Use /image <path>, /reset, or /exit."
-        );
+        options.dependencies.writeStderr(INTERACTIVE_CHAT_UNKNOWN_COMMAND);
         continue;
       }
 

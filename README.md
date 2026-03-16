@@ -158,12 +158,14 @@ Use `grok-agent-kit clients <client>` when you want a ready-to-paste install sni
 - Use `chat --interactive --session <name>` to resume and auto-save the same named local session from a terminal REPL.
 - Use `chat --reset-session --session <name>` to start that named session over.
 - Use `chat --image <path>` one or more times to attach local PNG or JPEG files.
+- Interactive chat prints a one-line startup hint and supports `/help` to reprint the available slash commands.
 - Inside interactive chat, use `/image <path>` to queue a local PNG or JPEG for the next user message only.
 - Inside interactive chat, use `/reset` to clear the active conversation and delete the named local session when one is attached.
 - Inside interactive chat, use `/exit` to leave the REPL cleanly.
 - Use `chat --stream` to print chat text incrementally as xAI sends deltas.
 - Use `x-search --stream` and `web-search --stream` to stream search text incrementally.
 - Use `x-search --interactive` and `web-search --interactive` for live search REPL loops in the terminal.
+- Interactive search also prints a one-line startup hint and supports `/help` to reprint the available slash commands.
 - Use `/reset` and `/exit` inside interactive search to clear the active search context or leave the REPL.
 - Use `x-search --session <name>` and `web-search --session <name>` to continue search workflows in the same named session.
 - Use `sessions show <name>` to print the saved local transcript for that named session, including models and token totals when available.

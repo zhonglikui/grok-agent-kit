@@ -83,7 +83,10 @@ export async function runInteractiveXSearch(
   await runInteractiveSearch({
     ...options,
     promptLabel: "x-search> ",
-    usageHint: "Unknown command. Use /reset or /exit.",
+    startupHint: "Interactive x-search ready. Commands: /help, /reset, /exit.",
+    helpText:
+      "Commands: /help shows this message; /reset clears the current conversation; /exit leaves interactive mode.",
+    usageHint: "Unknown command. Use /help, /reset, or /exit.",
     executeTurn: async (prompt, state) =>
       executeXSearchTurn({
         dependencies: options.dependencies,
@@ -105,7 +108,11 @@ export async function runInteractiveWebSearch(
   await runInteractiveSearch({
     ...options,
     promptLabel: "web-search> ",
-    usageHint: "Unknown command. Use /reset or /exit.",
+    startupHint:
+      "Interactive web-search ready. Commands: /help, /reset, /exit.",
+    helpText:
+      "Commands: /help shows this message; /reset clears the current conversation; /exit leaves interactive mode.",
+    usageHint: "Unknown command. Use /help, /reset, or /exit.",
     executeTurn: async (prompt, state) =>
       executeWebSearchTurn({
         dependencies: options.dependencies,
@@ -183,6 +190,8 @@ async function runInteractiveSearch(input: {
   model?: string;
   previousResponseId?: string;
   promptLabel: string;
+  startupHint: string;
+  helpText: string;
   usageHint: string;
   executeTurn: (
     prompt: string,
@@ -209,6 +218,7 @@ async function runInteractiveSearch(input: {
 
   try {
     interactiveConsole.setHistory(await replHistoryStore.load());
+    input.dependencies.writeStdout(input.startupHint);
 
     while (true) {
       const line = await interactiveConsole.prompt(input.promptLabel);
@@ -234,6 +244,11 @@ async function runInteractiveSearch(input: {
           history: []
         };
         input.dependencies.writeStdout("Conversation reset.");
+        continue;
+      }
+
+      if (trimmedLine === "/help") {
+        input.dependencies.writeStdout(input.helpText);
         continue;
       }
 

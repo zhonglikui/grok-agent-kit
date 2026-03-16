@@ -36,6 +36,59 @@ class MockInteractiveConsole {
 }
 
 describe("interactive chat", () => {
+  it("prints startup guidance and supports /help in interactive chat", async () => {
+    const stdout: string[] = [];
+    const stderr: string[] = [];
+    const service = {
+      chat: vi.fn(),
+      xSearch: vi.fn(),
+      webSearch: vi.fn(),
+      models: vi.fn()
+    };
+    const interactiveConsole = new MockInteractiveConsole([
+      "/help",
+      "/exit"
+    ]);
+
+    const cli = buildCli({
+      service,
+      sessionStore: {
+        get: vi.fn(),
+        list: vi.fn(),
+        set: vi.fn(),
+        delete: vi.fn()
+      },
+      replHistoryStore: {
+        load: vi.fn().mockResolvedValue([]),
+        append: vi.fn().mockResolvedValue(undefined)
+      },
+      createInteractiveConsole: vi.fn().mockResolvedValue(interactiveConsole),
+      stdinIsTTY: () => true,
+      readStdin: vi.fn(),
+      startMcpServer: vi.fn(),
+      writeStdout: (value) => stdout.push(value),
+      writeStdoutRaw: vi.fn(),
+      writeStderr: (value) => stderr.push(value)
+    } as any);
+
+    await cli.parseAsync([
+      "node",
+      "grok-agent-kit",
+      "chat",
+      "--interactive"
+    ]);
+
+    expect(stdout).toContain(
+      "Interactive chat ready. Commands: /help, /image <path>, /reset, /exit."
+    );
+    expect(stdout).toContain(
+      "Commands: /help shows this message; /image <path> queues local images; /reset clears the current conversation; /exit leaves interactive mode."
+    );
+    expect(stderr).toEqual([]);
+    expect(service.chat).not.toHaveBeenCalled();
+    expect(interactiveConsole.closed).toBe(true);
+  });
+
   it("runs multi-turn interactive chat with streaming continuity", async () => {
     const stdout: string[] = [];
     const service = {

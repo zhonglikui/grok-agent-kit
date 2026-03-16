@@ -28,6 +28,59 @@ afterEach(() => {
 });
 
 describe("interactive search", () => {
+  it("prints startup guidance and supports /help in interactive search", async () => {
+    const stdout: string[] = [];
+    const stderr: string[] = [];
+    const service = {
+      chat: vi.fn(),
+      xSearch: vi.fn(),
+      webSearch: vi.fn(),
+      models: vi.fn()
+    };
+    const interactiveConsole = new MockInteractiveConsole([
+      "/help",
+      "/exit"
+    ]);
+
+    const cli = buildCli({
+      service,
+      sessionStore: {
+        get: vi.fn(),
+        list: vi.fn(),
+        set: vi.fn(),
+        delete: vi.fn()
+      },
+      replHistoryStore: {
+        load: vi.fn().mockResolvedValue([]),
+        append: vi.fn().mockResolvedValue(undefined)
+      },
+      createInteractiveConsole: vi.fn().mockResolvedValue(interactiveConsole),
+      stdinIsTTY: () => true,
+      readStdin: vi.fn(),
+      startMcpServer: vi.fn(),
+      writeStdout: (value) => stdout.push(value),
+      writeStdoutRaw: vi.fn(),
+      writeStderr: (value) => stderr.push(value)
+    } as any);
+
+    await cli.parseAsync([
+      "node",
+      "grok-agent-kit",
+      "x-search",
+      "--interactive"
+    ]);
+
+    expect(stdout).toContain(
+      "Interactive x-search ready. Commands: /help, /reset, /exit."
+    );
+    expect(stdout).toContain(
+      "Commands: /help shows this message; /reset clears the current conversation; /exit leaves interactive mode."
+    );
+    expect(stderr).toEqual([]);
+    expect(service.xSearch).not.toHaveBeenCalled();
+    expect(interactiveConsole.closed).toBe(true);
+  });
+
   it("runs multi-turn interactive x-search with streaming continuity", async () => {
     const stdout: string[] = [];
     const service = {
