@@ -1,13 +1,28 @@
 # Codex guidance
 
-Codex does not consume Claude-style `SKILL.md` files in the same way, so the Codex path for `grok-agent-kit` is:
+The installable Codex entry point for this project is the repository root `SKILL.md`.
 
-- configure the MCP server with `examples/clients/codex-config.toml`
-- add project-level `AGENTS.md` or personal prompt guidance that explains when to use:
-  - `grok_x_search`
-  - `grok_web_search`
-  - `grok_chat`
+Use this page as the Codex-specific companion once the `grok-agent-kit` MCP is installed.
 
-Suggested guidance text:
+## Recommended decision rule
 
-> Use `grok_x_search` for live X content, `grok_web_search` for docs and web grounding, and `grok_chat` only after search when synthesis is needed. Prefer `session` for continuity, preserve citations, and tighten domain or handle filters before broadening.
+- Start with `grok_x_search` for live X content, handle-specific monitoring, and social reactions.
+- Start with `grok_web_search` for official docs, changelogs, release notes, and broader web grounding.
+- Use `grok_chat` after search when you need synthesis, structured summaries, comparison, or drafting.
+
+## Continuity and filters
+
+- Reuse `session` whenever the user is continuing the same thread.
+- Use `resetSession` when the prior search context is no longer relevant.
+- Use `allowedXHandles` when the user names a specific X account or source.
+- Use `allowedWebDomains` when the user wants docs or evidence from a named site.
+
+## Prompt patterns
+
+- `grok_x_search`: “Find the latest X posts from xai about Grok search changes.”
+- `grok_web_search`: “Search the web for official xAI docs about X Search. Prefer docs.x.ai.”
+- `grok_chat`: “Summarize the X and web findings, keep citations, and list any uncertainty.”
+
+## Practical default
+
+Prefer search-first for fresh claims, keep citations in the result, and only broaden beyond the named handles or domains if the first pass is insufficient.
