@@ -4,6 +4,11 @@
 
 Community-built, unofficial CLI + MCP + skills toolkit for xAI Grok.
 
+## Requirements
+
+- Node.js `22+`
+- an `XAI_API_KEY`
+
 ## Install
 
 ```bash
@@ -54,6 +59,7 @@ GROK_AGENT_KIT_RETRY_MAX_DELAY_MS=4000
 ```
 
 The CLI retries transient rate-limit, timeout, and `5xx` failures by default so long-running MCP agent sessions are less likely to fail on a single flaky request.
+The published npm package officially supports Node.js `22+`, and the GitHub Actions CI / publish workflows use Node.js 22 to match that baseline.
 
 ## Doctor
 

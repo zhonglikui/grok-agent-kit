@@ -5,7 +5,7 @@ export default defineConfig({
     bin: "src/bin.ts"
   },
   format: ["esm"],
-  target: "node20",
+  target: "node22",
   platform: "node",
   sourcemap: true,
   clean: true,

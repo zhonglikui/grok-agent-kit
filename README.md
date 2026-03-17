@@ -33,7 +33,7 @@ The MCP server exposes:
 
 ## Requirements
 
-- Node.js `20+`
+- Node.js `22+`
 - an `XAI_API_KEY`
 
 ## Environment
@@ -54,6 +54,8 @@ GROK_AGENT_KIT_RETRY_MAX_DELAY_MS=4000
 
 `XAI_BASE_URL` is optional and defaults to the official xAI inference base URL.
 `grok-agent-kit` now retries transient rate-limit, timeout, and `5xx` failures by default to make long-running agent workflows more reliable.
+
+The published npm package officially supports Node.js `22+`. The GitHub Actions CI and Trusted Publishing workflows also run on Node.js 22 so the release environment matches the documented baseline.
 
 ## Quick start
 

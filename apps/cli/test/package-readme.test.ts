@@ -11,6 +11,7 @@ describe("package README alignment", () => {
   );
 
   it("documents the client config generator for npm users", () => {
+    expect(packageReadme).toContain("Node.js `22+`");
     expect(packageReadme).toContain("grok-agent-kit clients codex --mode published");
     expect(packageReadme).toContain("grok-agent-kit clients openclaw --mode local");
     expect(packageReadme).toContain("grok-agent-kit clients claude-code --mode published");

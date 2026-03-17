@@ -5,6 +5,7 @@ Use this checklist when preparing a community-facing release.
 ## Preflight
 
 - Confirm the working tree is clean and `main` is up to date.
+- Confirm the documented runtime baseline is still Node.js `22+`.
 - Update user-facing docs in both `README.md` and `README.zh-CN.md`.
 - Re-check client setup docs under `docs/clients/` and `docs/clients/*.zh-CN.md`.
 - Make sure package metadata in `apps/cli/package.json` still matches the public repo.
@@ -28,6 +29,7 @@ npm run smoke:pack-install
 
 - Confirm the npm account has permission to publish `grok-agent-kit`.
 - Confirm npm Trusted Publishing is configured for this package and `.github/workflows/publish.yml`.
+- Confirm `.github/workflows/ci.yml` and `.github/workflows/publish.yml` still use the Node.js 22 release baseline.
 - Run `npm publish --access public --dry-run` from `apps/cli/` if you want one final manual check.
 - Trigger the GitHub Actions publish workflow for the real release after verification is clean.
 - Remove any unused legacy `NPM_TOKEN` repository secret after the migration is complete.

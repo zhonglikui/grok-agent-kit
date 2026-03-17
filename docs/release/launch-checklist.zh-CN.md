@@ -5,6 +5,7 @@
 ## 发布前检查
 
 - 确认工作区干净，`main` 已和远端同步。
+- 确认当前文档声明的运行时基线仍为 Node.js `22+`。
 - 同步更新 `README.md` 和 `README.zh-CN.md`。
 - 复查 `docs/clients/` 与 `docs/clients/*.zh-CN.md` 下的客户端接入文档。
 - 确认 `apps/cli/package.json` 里的包元信息仍然与公开仓库保持一致。
@@ -28,6 +29,7 @@ npm run smoke:pack-install
 
 - 确认当前 npm 账号拥有发布 `grok-agent-kit` 的权限。
 - 触发 `.github/workflows/publish.yml` 之前，先确认 npm 已为当前包和 `.github/workflows/publish.yml` 配置 Trusted Publishing。
+- 确认 `.github/workflows/ci.yml` 和 `.github/workflows/publish.yml` 仍然使用 Node.js 22 作为发布基线。
 - 如需最后一次人工确认，请先进入 `apps/cli/`，再运行 `npm publish --access public --dry-run`。
 - 所有验证通过后，再用 GitHub Actions 执行正式发布。
 - 迁移完成后，删除仓库里不再使用的旧 `NPM_TOKEN` 密钥。

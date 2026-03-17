@@ -44,7 +44,7 @@ describe("CLI package metadata", () => {
     expect(packageJson.repository?.url).toContain("github.com/zhonglikui/grok-agent-kit");
     expect(packageJson.homepage).toContain("github.com/zhonglikui/grok-agent-kit");
     expect(packageJson.bugs?.url).toContain("github.com/zhonglikui/grok-agent-kit/issues");
-    expect(packageJson.engines?.node).toBeTruthy();
+    expect(packageJson.engines?.node).toBe(">=22");
   });
 
   it("avoids unpublished local file dependencies", () => {

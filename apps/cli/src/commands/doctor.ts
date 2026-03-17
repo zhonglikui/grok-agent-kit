@@ -273,7 +273,7 @@ async function checkManagementApiConnectivity(
 function checkNodeVersion(): DoctorCheck {
   const majorVersion = Number(/^v(\d+)/.exec(process.version)?.[1] ?? 0);
 
-  if (majorVersion >= 20) {
+  if (majorVersion >= 22) {
     return {
       status: "PASS",
       label: "Node.js",
@@ -284,8 +284,8 @@ function checkNodeVersion(): DoctorCheck {
   return {
     status: "FAIL",
     label: "Node.js",
-    detail: `Detected ${process.version}; grok-agent-kit requires Node.js 20 or newer.`,
-    fix: "Install Node.js 20+ and re-run `grok-agent-kit doctor`."
+    detail: `Detected ${process.version}; grok-agent-kit requires Node.js 22 or newer.`,
+    fix: "Install Node.js 22+ and re-run `grok-agent-kit doctor`."
   };
 }
 

@@ -18,6 +18,15 @@ describe("release workflow guardrails", () => {
     expect(ciWorkflow).toContain("npm run pack:cli");
   });
 
+  it("pins modern GitHub Actions majors and a Node 22 release runtime", () => {
+    expect(ciWorkflow).toContain("uses: actions/checkout@v6");
+    expect(ciWorkflow).toContain("uses: actions/setup-node@v6");
+    expect(ciWorkflow).toContain("node-version: 22");
+    expect(publishWorkflow).toContain("uses: actions/checkout@v6");
+    expect(publishWorkflow).toContain("uses: actions/setup-node@v6");
+    expect(publishWorkflow).toContain("node-version: 22");
+  });
+
   it("uses GitHub OIDC trusted publishing instead of an npm token", () => {
     expect(publishWorkflow).toContain("id-token: write");
     expect(publishWorkflow).toContain("working-directory: apps/cli");
