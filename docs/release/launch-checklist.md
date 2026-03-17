@@ -30,6 +30,7 @@ npm run smoke:pack-install
 - Confirm the npm account has permission to publish `grok-agent-kit`.
 - Confirm npm Trusted Publishing is configured for this package and `.github/workflows/publish.yml`.
 - Confirm `.github/workflows/ci.yml` and `.github/workflows/publish.yml` still use the Node.js 22 release baseline.
+- Confirm `.github/workflows/publish.yml` upgrades npm to `11.5.1+` before `npm publish --provenance` when releasing on Node.js 22.
 - Run `npm publish --access public --dry-run` from `apps/cli/` if you want one final manual check.
 - Trigger the GitHub Actions publish workflow for the real release after verification is clean.
 - Remove any unused legacy `NPM_TOKEN` repository secret after the migration is complete.

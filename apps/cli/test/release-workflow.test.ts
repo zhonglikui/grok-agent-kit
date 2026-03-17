@@ -35,4 +35,9 @@ describe("release workflow guardrails", () => {
     expect(publishWorkflow).not.toContain("NPM_TOKEN");
     expect(publishWorkflow).not.toContain("npm publish --workspace apps/cli");
   });
+
+  it("upgrades npm to a trusted-publishing-compatible version on Node 22", () => {
+    expect(publishWorkflow).toContain("npm install -g npm@^11.5.1");
+    expect(publishWorkflow).toContain("npm --version");
+  });
 });

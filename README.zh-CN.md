@@ -53,7 +53,7 @@ GROK_AGENT_KIT_RETRY_MAX_DELAY_MS=4000
 ```
 
 `XAI_BASE_URL` 可选，默认值为官方 xAI inference base URL。
-当前 npm 已发布包官方支持 Node.js `22+`，GitHub Actions 的 CI 与 Trusted Publishing 发布工作流也统一运行在 Node.js 22 上，以保证发布环境与文档基线一致。
+当前 npm 已发布包官方支持 Node.js `22+`，GitHub Actions 的 CI 与 Trusted Publishing 发布工作流也统一运行在 Node.js 22 上，以保证发布环境与文档基线一致。由于 npm Trusted Publishing 当前要求 npm `11.5.1` 及以上版本，发布工作流会在 Node.js 22 环境内额外升级 npm。
 
 ## 快速开始
 

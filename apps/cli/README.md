@@ -59,7 +59,7 @@ GROK_AGENT_KIT_RETRY_MAX_DELAY_MS=4000
 ```
 
 The CLI retries transient rate-limit, timeout, and `5xx` failures by default so long-running MCP agent sessions are less likely to fail on a single flaky request.
-The published npm package officially supports Node.js `22+`, and the GitHub Actions CI / publish workflows use Node.js 22 to match that baseline.
+The published npm package officially supports Node.js `22+`, and the GitHub Actions CI / publish workflows use Node.js 22 to match that baseline. The GitHub Actions publish workflow also upgrades npm to `11.5.1+` because npm Trusted Publishing currently requires npm `11.5.1` or newer.
 
 ## Doctor
 

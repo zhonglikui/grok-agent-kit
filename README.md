@@ -55,7 +55,7 @@ GROK_AGENT_KIT_RETRY_MAX_DELAY_MS=4000
 `XAI_BASE_URL` is optional and defaults to the official xAI inference base URL.
 `grok-agent-kit` now retries transient rate-limit, timeout, and `5xx` failures by default to make long-running agent workflows more reliable.
 
-The published npm package officially supports Node.js `22+`. The GitHub Actions CI and Trusted Publishing workflows also run on Node.js 22 so the release environment matches the documented baseline.
+The published npm package officially supports Node.js `22+`. The GitHub Actions CI and Trusted Publishing workflows also run on Node.js 22 so the release environment matches the documented baseline. The publish workflow additionally upgrades npm to `11.5.1+`, because npm Trusted Publishing currently requires npm `11.5.1` or newer even when the runtime stays on Node.js 22.
 
 ## Quick start
 
